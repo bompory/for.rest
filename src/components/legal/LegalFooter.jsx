@@ -8,8 +8,14 @@ import privacyText from '../../../legal/개인정보처리방침_초안.md?raw'
  * 저작권/책임자 표기를 함께 보여준다. (초안 단계 — [확인 필요] 항목이 남아있는 동안은
  * 실제 서비스에 배포하지 않는다.)
  */
+// 초안에 [확인 필요] 플레이스홀더가 남아있는 동안은 실제 사용자 화면에 노출하지 않는다.
+// 운영주체/문의처 등 확인이 끝나면 이 스위치를 true로 바꿔서 다시 노출한다.
+const READY_TO_SHOW = false
+
 export default function LegalFooter({ className = '' }) {
   const [open, setOpen] = useState(null) // 'terms' | 'privacy' | null
+
+  if (!READY_TO_SHOW) return null
 
   return (
     <footer className={`text-center text-[11px] text-ink/40 py-4 ${className}`}>
