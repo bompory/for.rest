@@ -12,6 +12,7 @@ const TABS = [
   { to: 'checkin', label: '체크인', icon: '🏠' },
   { to: 'records', label: '내 기록', icon: '📔' },
   { to: 'collection', label: '도감', icon: '🐾' },
+  { to: 'garden', label: '정원', icon: '🌱' },
 ]
 
 export default function StudentShell({ session }) {

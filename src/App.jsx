@@ -8,6 +8,7 @@ import StudentShell from './pages/student/StudentShell'
 import CheckinPage from './pages/student/CheckinPage'
 import MyRecordsPage from './pages/student/MyRecordsPage'
 import CollectionPage from './pages/student/CollectionPage'
+import GardenPage from './pages/student/GardenPage'
 import TeacherDashboard from './pages/teacher/TeacherDashboard'
 import StudentDetailPage from './pages/teacher/StudentDetailPage'
 import SettingsPage from './pages/teacher/SettingsPage'
@@ -32,6 +33,7 @@ export default function App() {
         <Route path="checkin" element={<CheckinPage session={session} />} />
         <Route path="records" element={<MyRecordsPage session={session} />} />
         <Route path="collection" element={<CollectionPage session={session} />} />
+        <Route path="garden" element={<GardenPage session={session} />} />
       </Route>
 
       <Route
