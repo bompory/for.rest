@@ -25,6 +25,9 @@ export default function CheckinPage({ session }) {
   const { data: classDoc } = useFirestoreDoc(['classes', classId])
   const { data: settings } = useFirestoreDoc(['classes', classId, 'settings', 'config'])
   const { data: student } = useFirestoreDoc(['classes', classId, 'students', studentId])
+  const stickerOnTimeSrc = classDoc?.stickerOnTimeUrl || stickerOnTime
+  const stickerLateSrc = classDoc?.stickerLateUrl || stickerLate
+  const stickerAnswerSrc = classDoc?.stickerAnswerUrl || stickerAnswer
   const { data: checkin } = useFirestoreDoc(['classes', classId, 'checkins', `${dateId}_${studentId}`])
 
   const [codeModalOpen, setCodeModalOpen] = useState(false)
@@ -159,7 +162,7 @@ export default function CheckinPage({ session }) {
         <Card className="w-full max-w-sm flex flex-col gap-4">
           <div className="flex flex-col items-center gap-1">
             <img
-              src={checkin.status === 'late' ? stickerLate : stickerOnTime}
+              src={checkin.status === 'late' ? stickerLateSrc : stickerOnTimeSrc}
               alt={checkin.status === 'late' ? '지각 스티커' : '정상출석 스티커'}
               className="w-20 h-20 object-contain"
             />
@@ -198,7 +201,7 @@ export default function CheckinPage({ session }) {
         <Card className="w-full max-w-sm flex flex-col gap-3">
           <div className="flex flex-col items-center gap-1">
             <img
-              src={checkin.status === 'late' ? stickerLate : stickerOnTime}
+              src={checkin.status === 'late' ? stickerLateSrc : stickerOnTimeSrc}
               alt={checkin.status === 'late' ? '지각 스티커' : '정상출석 스티커'}
               className="w-16 h-16 object-contain"
             />
@@ -251,7 +254,7 @@ export default function CheckinPage({ session }) {
 
       <Modal open={showAnswerSticker} onClose={() => setShowAnswerSticker(false)}>
         <div className="flex flex-col items-center gap-3 py-2 text-center">
-          <img src={stickerAnswer} alt="답변 작성 완료 스티커" className="w-28 h-28 object-contain" />
+          <img src={stickerAnswerSrc} alt="답변 작성 완료 스티커" className="w-28 h-28 object-contain" />
           <p className="font-body">{pickMessage('answerDone', studentName)}</p>
           <SpringButton onClick={() => setShowAnswerSticker(false)}>닫기</SpringButton>
         </div>

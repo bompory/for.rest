@@ -12,10 +12,20 @@ import {
 } from 'firebase/firestore'
 import { db } from '../../firebase'
 import { useFirestoreDoc, useFirestoreQuery } from '../../hooks/useFirestore'
+import { MASCOT_SLOTS, resetMascotImage, uploadMascotImage } from '../../lib/mascotUpload'
 import Card from '../../components/ui/Card'
 import SpringButton from '../../components/ui/SpringButton'
+import stickerOnTimeDefault from '../../assets/sticker-ontime.png'
+import stickerLateDefault from '../../assets/sticker-late.png'
+import stickerAnswerDefault from '../../assets/sticker-answer.png'
 
-const TABS = ['학급 정보', '지각 규칙', '수업일', '질문 관리', '학생 명단']
+const DEFAULT_IMAGES = {
+  stickerOnTime: stickerOnTimeDefault,
+  stickerLate: stickerLateDefault,
+  stickerAnswer: stickerAnswerDefault,
+}
+
+const TABS = ['학급 정보', '마스코트', '지각 규칙', '수업일', '질문 관리', '학생 명단']
 
 export default function SettingsPage({ teacher }) {
   const classId = teacher.uid
@@ -61,7 +71,14 @@ export default function SettingsPage({ teacher }) {
           <ClassInfoTab classDoc={classDoc} patchClass={patchClass} />
         ))}
 
-      {tab !== '학급 정보' &&
+      {tab === '마스코트' &&
+        (!classDoc ? (
+          <p className="text-sm text-ink/50">불러오는 중...</p>
+        ) : (
+          <MascotTab classId={classId} classDoc={classDoc} />
+        ))}
+
+      {tab !== '학급 정보' && tab !== '마스코트' &&
         (!settings ? (
           <p className="text-sm text-ink/50">불러오는 중...</p>
         ) : (
@@ -72,6 +89,83 @@ export default function SettingsPage({ teacher }) {
             {tab === '학생 명단' && <StudentsTab classId={classId} />}
           </>
         ))}
+    </div>
+  )
+}
+
+function MascotTab({ classId, classDoc }) {
+  const [busySlot, setBusySlot] = useState(null)
+  const [error, setError] = useState('')
+
+  async function handleUpload(slotKey, file) {
+    if (!file) return
+    setError('')
+    setBusySlot(slotKey)
+    try {
+      await uploadMascotImage(classId, slotKey, file)
+    } catch (err) {
+      setError(err.message || '업로드 중 문제가 생겼어요.')
+    } finally {
+      setBusySlot(null)
+    }
+  }
+
+  async function handleReset(slotKey) {
+    setBusySlot(slotKey)
+    try {
+      await resetMascotImage(classId, slotKey)
+    } finally {
+      setBusySlot(null)
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Card>
+        <p className="text-sm text-ink/60">
+          체크인 화면에 나오는 스티커를 우리 반만의 사진이나 캐릭터로 바꿀 수 있어요. 이미지는 5MB
+          이하로 올려주세요. 비워두면 기본 이미지가 사용돼요.
+        </p>
+      </Card>
+      {MASCOT_SLOTS.map((slot) => {
+        const currentUrl = classDoc[slot.field]
+        const isBusy = busySlot === slot.key
+        return (
+          <Card key={slot.key} className="flex items-center gap-4">
+            <img
+              src={currentUrl || DEFAULT_IMAGES[slot.key]}
+              alt={slot.label}
+              className="w-16 h-16 object-contain rounded-xl2 bg-cream"
+            />
+            <div className="flex-1 flex flex-col gap-1">
+              <p className="text-sm font-semibold">{slot.label}</p>
+              <p className="text-xs text-ink/50">{currentUrl ? '우리 반 사진 사용 중' : '기본 이미지 사용 중'}</p>
+              <div className="flex items-center gap-3 mt-1">
+                <label className="text-xs text-sage-dark underline cursor-pointer">
+                  {isBusy ? '업로드 중...' : '이미지 업로드'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={isBusy}
+                    onChange={(e) => handleUpload(slot.key, e.target.files?.[0])}
+                  />
+                </label>
+                {currentUrl && (
+                  <button
+                    className="text-xs text-ink/50 underline"
+                    disabled={isBusy}
+                    onClick={() => handleReset(slot.key)}
+                  >
+                    기본값으로
+                  </button>
+                )}
+              </div>
+            </div>
+          </Card>
+        )
+      })}
+      {error && <p className="text-warmOrange text-sm">{error}</p>}
     </div>
   )
 }
