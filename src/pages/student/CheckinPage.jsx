@@ -150,6 +150,7 @@ export default function CheckinPage({ session }) {
       <MascotGreeting
         mood={checkin ? moodFromEmojiKey(mood || (checkin.status === 'late' ? 'okay' : 'good')) : 'happy'}
         message={greetingMsg}
+        imageSrc={checkin ? (checkin.status === 'late' ? stickerLateSrc : stickerAnswerSrc) : undefined}
       />
 
       {!isChecked && (

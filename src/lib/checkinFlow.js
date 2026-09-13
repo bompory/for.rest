@@ -6,6 +6,7 @@ import {
   query,
   runTransaction,
   serverTimestamp,
+  updateDoc,
   where,
 } from 'firebase/firestore'
 import { db } from '../firebase'
@@ -118,5 +119,14 @@ export async function finalizeCheckin({ classId, studentId, dateId, mood, answer
     })
 
     return { newlyUnlocked }
+  })
+}
+
+/** 학생이 교사의 답장에 다시 답장을 남긴다 (날짜 제한 없이 언제든 가능). */
+export async function replyToTeacher({ classId, studentId, dateId, text }) {
+  const checkinRef = doc(db, 'classes', classId, 'checkins', `${dateId}_${studentId}`)
+  await updateDoc(checkinRef, {
+    studentReply: text.trim() || null,
+    studentReplyAt: serverTimestamp(),
   })
 }

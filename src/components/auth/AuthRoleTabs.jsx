@@ -14,7 +14,7 @@ export default function AuthRoleTabs({ active }) {
           active === 'teacher' ? 'bg-sage text-white shadow-soft' : 'text-ink/50',
         ].join(' ')}
       >
-        👩‍🏫 교사 로그인
+        교사 로그인
       </button>
       <button
         type="button"
@@ -24,7 +24,7 @@ export default function AuthRoleTabs({ active }) {
           active === 'student' ? 'bg-sage text-white shadow-soft' : 'text-ink/50',
         ].join(' ')}
       >
-        🐱 학생 로그인
+        학생 로그인
       </button>
     </div>
   )

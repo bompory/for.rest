@@ -190,6 +190,13 @@ function CheckinTimelineRow({ classId, checkin: c }) {
           답장 남기기
         </button>
       )}
+
+      {c.studentReply && (
+        <div className="mt-1.5 flex items-start gap-1.5 bg-sky-light/60 rounded-xl2 px-3 py-2">
+          <span className="text-sm">💬</span>
+          <span className="text-sm text-ink/80 flex-1">{c.studentReply}</span>
+        </div>
+      )}
     </div>
   )
 }
