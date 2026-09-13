@@ -6,7 +6,7 @@ import { auth, db } from '../firebase'
 import { useStudentSession } from '../hooks/useStudentSession'
 import SpringButton from '../components/ui/SpringButton'
 import Card from '../components/ui/Card'
-import Mascot from '../components/mascot/Mascot'
+import MascotHero from '../components/mascot/MascotHero'
 import AuthRoleTabs from '../components/auth/AuthRoleTabs'
 import AppTitle from '../components/ui/AppTitle'
 
@@ -179,7 +179,7 @@ export default function LoginStudent() {
     <div className="min-h-screen flex flex-col items-center justify-center px-6 gap-6">
       <AppTitle size="text-2xl" />
       <AuthRoleTabs active="student" />
-      <Mascot mood="happy" size={100} />
+      <MascotHero size={100} />
       <Card className="w-full max-w-sm">
         {step === STEPS.CODE && (
           <form onSubmit={handleCodeSubmit} className="flex flex-col gap-3">

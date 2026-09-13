@@ -5,7 +5,7 @@ import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db } from '../firebase'
 import SpringButton from '../components/ui/SpringButton'
 import Card from '../components/ui/Card'
-import Mascot from '../components/mascot/Mascot'
+import MascotHero from '../components/mascot/MascotHero'
 import AuthRoleTabs from '../components/auth/AuthRoleTabs'
 import AppTitle from '../components/ui/AppTitle'
 import { defaultQuestionBank } from '../seed/questions'
@@ -88,7 +88,7 @@ export default function LoginTeacher() {
     <div className="min-h-screen flex flex-col items-center justify-center px-6 gap-6">
       <AppTitle size="text-2xl" />
       <AuthRoleTabs active="teacher" />
-      <Mascot mood="neutral" size={90} />
+      <MascotHero size={100} />
       <Card className="w-full max-w-sm flex flex-col items-center gap-4">
         <h2 className="font-round text-xl font-bold text-center">교사 로그인</h2>
         <p className="text-sm text-ink/60 text-center">
