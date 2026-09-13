@@ -57,7 +57,7 @@ export async function ensureDailyQuestion(classId, dateId) {
  * 기분/답변 제출(또는 건너뛰기). 그날 처음 완료될 때만 스탬프·지각 롤업 필드를 반영하고,
  * 이후 같은 날 수정은 내용만 갱신한다 (중복 적립 방지).
  */
-export async function finalizeCheckin({ classId, studentId, dateId, mood, answer, questionId }) {
+export async function finalizeCheckin({ classId, studentId, dateId, mood, answer, questionId, questionText }) {
   const checkinRef = doc(db, 'classes', classId, 'checkins', `${dateId}_${studentId}`)
   const studentRef = doc(db, 'classes', classId, 'students', studentId)
   const settingsRef = doc(db, 'classes', classId, 'settings', 'config')
@@ -77,6 +77,7 @@ export async function finalizeCheckin({ classId, studentId, dateId, mood, answer
         answer: answerText,
         answerUpdatedAt: serverTimestamp(),
         questionId: questionId || checkin.questionId || null,
+        questionText: questionText || checkin.questionText || null,
       })
       return { newlyUnlocked: [] }
     }
@@ -111,6 +112,7 @@ export async function finalizeCheckin({ classId, studentId, dateId, mood, answer
       answer: answerText,
       answerUpdatedAt: serverTimestamp(),
       questionId: questionId || checkin.questionId || null,
+      questionText: questionText || checkin.questionText || null,
       rollupApplied: true,
       stamps: { attendance: attendanceStamp, answer: answerStamp },
     })

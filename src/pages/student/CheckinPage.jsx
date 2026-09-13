@@ -122,6 +122,7 @@ export default function CheckinPage({ session }) {
         mood,
         answer: skipAnswer ? null : answer,
         questionId: question?.id,
+        questionText: question?.text,
       })
       setBurst(true)
       setTimeout(() => setBurst(false), 1200)
@@ -199,7 +200,9 @@ export default function CheckinPage({ session }) {
           )}
           <SpringButton
             variant="sky"
-            onClick={() => finalizeCheckin({ classId, studentId, dateId, mood, answer, questionId: question?.id })}
+            onClick={() =>
+              finalizeCheckin({ classId, studentId, dateId, mood, answer, questionId: question?.id, questionText: question?.text })
+            }
             disabled={busy}
           >
             수정 저장

@@ -157,9 +157,11 @@ async function main() {
   const questions = defaultQuestionBank()
   const questionBatch = db.batch()
   const questionIds = []
+  const questionTextById = {}
   questions.forEach((text, i) => {
     const id = `q${i + 1}`
     questionIds.push(id)
+    questionTextById[id] = text
     questionBatch.set(classRef.collection('questions').doc(id), {
       text,
       order: i,
@@ -325,6 +327,7 @@ async function main() {
         answer,
         answerUpdatedAt: answer ? Timestamp.fromDate(checkedAt) : null,
         questionId,
+        questionText: questionTextById[questionId] || null,
         rollupApplied: true,
         stamps: { attendance: attendanceStamp, answer: answerStamp },
       })

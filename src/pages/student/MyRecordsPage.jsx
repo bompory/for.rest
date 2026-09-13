@@ -62,10 +62,19 @@ export default function MyRecordsPage({ session }) {
                 {STATUS_LABEL[c.status]?.text}
               </span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-start gap-2 text-sm">
               <span className="text-xl">{moodEmoji(c.mood)}</span>
-              {c.answer && <p className="text-ink/80 flex-1">{c.answer}</p>}
+              <div className="flex-1 flex flex-col gap-1">
+                {c.questionText && <p className="text-xs text-ink/50">{c.questionText}</p>}
+                {c.answer && <p className="text-ink/80">{c.answer}</p>}
+              </div>
             </div>
+            {c.teacherReply && (
+              <div className="flex items-start gap-1.5 bg-peach-light/60 rounded-xl2 px-3 py-2 mt-1">
+                <span className="text-sm">🐱</span>
+                <p className="text-sm text-ink/80 flex-1">{c.teacherReply}</p>
+              </div>
+            )}
           </Card>
         ))}
         {!loading && checkins.length === 0 && (

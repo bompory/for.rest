@@ -9,6 +9,7 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  updateDoc,
   where,
 } from 'firebase/firestore'
 import { db } from '../../firebase'
@@ -125,19 +126,70 @@ export default function StudentDetailPage({ teacher }) {
         <p className="text-sm font-semibold mb-2">타임라인</p>
         <div className="flex flex-col gap-3">
           {checkins.map((c) => (
-            <div key={c.id} className="border-b border-sage-light/50 pb-2 last:border-0">
-              <div className="flex justify-between text-sm">
-                <span className="font-semibold">{formatKoreanDate(c.date)}</span>
-                <span className="text-ink/60">
-                  {STATUS_LABEL[c.status]} · {c.checkedAt ? toTimeLabel(c.checkedAt) : '-'}
-                </span>
-              </div>
-              {c.answer && <p className="text-sm text-ink/80 mt-1">{c.answer}</p>}
-            </div>
+            <CheckinTimelineRow key={c.id} classId={classId} checkin={c} />
           ))}
           {checkins.length === 0 && <p className="text-sm text-ink/50">기록이 없어요.</p>}
         </div>
       </Card>
+    </div>
+  )
+}
+
+function CheckinTimelineRow({ classId, checkin: c }) {
+  const [replyDraft, setReplyDraft] = useState(c.teacherReply || '')
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  async function saveReply() {
+    setSaving(true)
+    try {
+      await updateDoc(doc(db, 'classes', classId, 'checkins', c.id), {
+        teacherReply: replyDraft.trim() || null,
+        teacherReplyAt: serverTimestamp(),
+      })
+      setEditing(false)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="border-b border-sage-light/50 pb-3 last:border-0">
+      <div className="flex justify-between text-sm">
+        <span className="font-semibold">{formatKoreanDate(c.date)}</span>
+        <span className="text-ink/60">
+          {STATUS_LABEL[c.status]} · {c.checkedAt ? toTimeLabel(c.checkedAt) : '-'}
+        </span>
+      </div>
+      {c.questionText && <p className="text-xs text-ink/50 mt-1">{c.questionText}</p>}
+      {c.answer && <p className="text-sm text-ink/80 mt-0.5">{c.answer}</p>}
+
+      {!c.answer && !c.questionText ? null : editing ? (
+        <div className="flex gap-2 mt-2">
+          <input
+            autoFocus
+            value={replyDraft}
+            onChange={(e) => setReplyDraft(e.target.value)}
+            placeholder="학생에게 남길 답장"
+            className="flex-1 rounded-xl2 border border-sage-light px-3 py-1.5 bg-white/70 outline-none focus:border-sage text-sm"
+          />
+          <SpringButton onClick={saveReply} disabled={saving} className="text-xs px-3 py-1.5">
+            저장
+          </SpringButton>
+        </div>
+      ) : c.teacherReply ? (
+        <button
+          className="mt-2 flex items-start gap-1.5 bg-peach-light/60 rounded-xl2 px-3 py-2 w-full text-left"
+          onClick={() => setEditing(true)}
+        >
+          <span className="text-sm">🐱</span>
+          <span className="text-sm text-ink/80 flex-1">{c.teacherReply}</span>
+        </button>
+      ) : (
+        <button className="text-xs text-sage-dark underline mt-2" onClick={() => setEditing(true)}>
+          답장 남기기
+        </button>
+      )}
     </div>
   )
 }
