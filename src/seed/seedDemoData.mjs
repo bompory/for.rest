@@ -15,9 +15,16 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
+import { createHash } from 'node:crypto'
 import admin from 'firebase-admin'
 import { defaultQuestionBank } from './questions.js'
 import { DEMO_STUDENT_NAMES } from './names.js'
+
+// 앱 쪽(src/lib/pinHash.js)과 동일한 SHA-256 해시 — 알고리즘만 같으면 브라우저의
+// SubtleCrypto와 결과가 동일하므로 이 계정으로도 실제 로그인이 정상적으로 된다.
+function hashPin(pin) {
+  return createHash('sha256').update(pin).digest('hex')
+}
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const serviceAccountPath = join(__dirname, '..', '..', 'serviceAccountKey.json')
@@ -191,7 +198,7 @@ async function main() {
   students.forEach((s) => {
     studentBatch.set(classRef.collection('students').doc(s.id), {
       name: s.name,
-      pin: s.pin,
+      pinHash: hashPin(s.pin),
       order: s.order,
       isActive: true,
       totalStamps: 0,

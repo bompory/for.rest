@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { addDoc, collection, getDocs, query, where } from 'firebase/firestore'
+import { addDoc, collection, getDocs, query, serverTimestamp, where } from 'firebase/firestore'
 import { signInAnonymously } from 'firebase/auth'
 import { auth, db } from '../firebase'
 import { useStudentSession } from '../hooks/useStudentSession'
+import { hashPin } from '../lib/pinHash'
 import SpringButton from '../components/ui/SpringButton'
 import Card from '../components/ui/Card'
 import MascotHero from '../components/mascot/MascotHero'
@@ -21,6 +22,8 @@ export default function LoginStudent() {
   const [matchedStudent, setMatchedStudent] = useState(null) // null = 처음 등록하는 학생
   const [pin, setPin] = useState('')
   const [pinConfirm, setPinConfirm] = useState('')
+  const [consentPersonal, setConsentPersonal] = useState(false)
+  const [consentGuardian, setConsentGuardian] = useState(false)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const { login } = useStudentSession()
@@ -111,13 +114,17 @@ export default function LoginStudent() {
     setError('')
 
     if (matchedStudent) {
-      // 기존 학생: PIN 대조
-      if (pin !== matchedStudent.pin) {
-        setError('PIN이 맞지 않아요. 다시 입력해줄래?')
-        return
-      }
+      // 기존 학생: PIN 대조 (해시 저장분 우선, 예전에 평문으로 등록된 학생은 평문으로 대조)
       setBusy(true)
       try {
+        const enteredHash = await hashPin(pin)
+        const matches = matchedStudent.pinHash
+          ? enteredHash === matchedStudent.pinHash
+          : pin === matchedStudent.pin
+        if (!matches) {
+          setError('PIN이 맞지 않아요. 다시 입력해줄래?')
+          return
+        }
         await login({
           classId,
           classCode: classCode.trim().toUpperCase(),
@@ -138,6 +145,10 @@ export default function LoginStudent() {
       setError('PIN이 서로 달라요. 두 칸에 같은 숫자를 입력해줘.')
       return
     }
+    if (!consentPersonal || !consentGuardian) {
+      setError('위 두 동의 항목에 모두 체크해야 시작할 수 있어요.')
+      return
+    }
     setBusy(true)
     try {
       const name = nameInput.trim()
@@ -150,9 +161,10 @@ export default function LoginStudent() {
         setStep(STEPS.NAME)
         return
       }
+      const pinHash = await hashPin(pin)
       const newDoc = await addDoc(collection(db, 'classes', classId, 'students'), {
         name,
-        pin,
+        pinHash,
         order: existing.size,
         isActive: true,
         totalStamps: 0,
@@ -161,6 +173,8 @@ export default function LoginStudent() {
         last7LateFlags: [],
         last7AnswerLengths: [],
         unlockedBadgeIds: [],
+        personalInfoConsentAt: serverTimestamp(),
+        guardianConsentConfirmedAt: serverTimestamp(),
       })
       await login({
         classId,
@@ -274,6 +288,24 @@ export default function LoginStudent() {
                   onChange={(e) => setPinConfirm(e.target.value.replace(/\D/g, '').slice(0, 4))}
                   className="rounded-xl2 border border-sage-light px-4 py-3 bg-white/70 outline-none focus:border-sage text-center tracking-[0.5em] font-round text-2xl"
                 />
+                <label className="flex items-start gap-2 text-xs text-ink/70">
+                  <input
+                    type="checkbox"
+                    checked={consentPersonal}
+                    onChange={(e) => setConsentPersonal(e.target.checked)}
+                    className="mt-0.5"
+                  />
+                  (필수) 이름과 기록이 저장되는 것에 동의해요
+                </label>
+                <label className="flex items-start gap-2 text-xs text-ink/70">
+                  <input
+                    type="checkbox"
+                    checked={consentGuardian}
+                    onChange={(e) => setConsentGuardian(e.target.checked)}
+                    className="mt-0.5"
+                  />
+                  (필수) 만 14세 미만이라면, 선생님을 통해 보호자 동의를 이미 받았어요
+                </label>
               </>
             )}
             {error && <p className="text-warmOrange text-sm text-center">{error}</p>}
@@ -283,7 +315,7 @@ export default function LoginStudent() {
               disabled={
                 busy ||
                 pin.length !== 4 ||
-                (!matchedStudent && pinConfirm.length !== 4)
+                (!matchedStudent && (pinConfirm.length !== 4 || !consentPersonal || !consentGuardian))
               }
             >
               체크인 화면으로

@@ -13,6 +13,7 @@ import {
 import { db } from '../../firebase'
 import { useFirestoreDoc, useFirestoreQuery } from '../../hooks/useFirestore'
 import { MASCOT_SLOTS, resetMascotImage, uploadMascotImage } from '../../lib/mascotUpload'
+import { hashPin } from '../../lib/pinHash'
 import Card from '../../components/ui/Card'
 import SpringButton from '../../components/ui/SpringButton'
 import stickerOnTimeDefault from '../../assets/sticker-ontime.png'
@@ -522,16 +523,8 @@ function StudentsTab({ classId }) {
   const [name, setName] = useState('')
   const [pin, setPin] = useState('')
 
-  const [revealedIds, setRevealedIds] = useState(new Set())
-
-  function toggleReveal(id) {
-    setRevealedIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
+  const [resettingId, setResettingId] = useState(null)
+  const [newPinDraft, setNewPinDraft] = useState('')
 
   async function addStudent() {
     const trimmed = name.trim()
@@ -540,9 +533,10 @@ function StudentsTab({ classId }) {
       alert('이미 같은 이름의 학생이 있어요. 이름을 다르게 적어주세요.')
       return
     }
+    const pinHash = await hashPin(pin)
     await addDoc(collection(db, 'classes', classId, 'students'), {
       name: trimmed,
-      pin,
+      pinHash,
       order: students.length,
       isActive: true,
       totalStamps: 0,
@@ -554,6 +548,14 @@ function StudentsTab({ classId }) {
     })
     setName('')
     setPin('')
+  }
+
+  async function savePinReset(studentId) {
+    if (newPinDraft.length !== 4) return
+    const pinHash = await hashPin(newPinDraft)
+    await updateDoc(doc(db, 'classes', classId, 'students', studentId), { pinHash })
+    setResettingId(null)
+    setNewPinDraft('')
   }
 
   async function toggleActive(s) {
@@ -591,27 +593,61 @@ function StudentsTab({ classId }) {
       <Card>
         <p className="text-sm font-semibold mb-2">학생 명단 ({students.length}명)</p>
         <p className="text-xs text-ink/50 mb-3">
-          학생들이 로그인 화면에서 스스로 이름을 등록하면 여기에 자동으로 추가돼요. PIN을 잊어버렸다는
-          학생이 있으면 여기서 확인해서 알려주세요.
+          학생들이 로그인 화면에서 스스로 이름을 등록하면 여기에 자동으로 추가돼요. PIN은 암호화되어
+          저장되어 선생님도 조회할 수 없어요 — 학생이 PIN을 잊어버리면 "PIN 재설정"으로 새 PIN을
+          정해주세요.
         </p>
         <div className="flex flex-col gap-3">
           {students.map((s) => (
             <div key={s.id} className="flex flex-col gap-1.5 border-b border-sage-light/40 pb-2">
               <span className={`text-sm ${s.isActive ? '' : 'line-through text-ink/30'}`}>{s.name}</span>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <button
-                  className="text-xs text-ink/50 underline font-mono"
-                  onClick={() => toggleReveal(s.id)}
-                >
-                  PIN: {revealedIds.has(s.id) ? s.pin : '••••'}
-                </button>
-                <button className="text-xs underline" onClick={() => toggleActive(s)}>
-                  {s.isActive ? '비활성(전학)' : '다시 활성화'}
-                </button>
-                <button className="text-xs text-warmOrange underline" onClick={() => removeStudent(s)}>
-                  삭제
-                </button>
-              </div>
+              {resettingId === s.id ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    autoFocus
+                    inputMode="numeric"
+                    maxLength={4}
+                    value={newPinDraft}
+                    onChange={(e) => setNewPinDraft(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    placeholder="새 PIN 4자리"
+                    className="w-24 rounded-xl2 border border-sage-light px-2 py-1 text-sm"
+                  />
+                  <button
+                    className="text-xs text-sage-dark underline"
+                    onClick={() => savePinReset(s.id)}
+                    disabled={newPinDraft.length !== 4}
+                  >
+                    저장
+                  </button>
+                  <button
+                    className="text-xs text-ink/40 underline"
+                    onClick={() => {
+                      setResettingId(null)
+                      setNewPinDraft('')
+                    }}
+                  >
+                    취소
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <button
+                    className="text-xs text-ink/50 underline"
+                    onClick={() => {
+                      setResettingId(s.id)
+                      setNewPinDraft('')
+                    }}
+                  >
+                    PIN 재설정
+                  </button>
+                  <button className="text-xs underline" onClick={() => toggleActive(s)}>
+                    {s.isActive ? '비활성(전학)' : '다시 활성화'}
+                  </button>
+                  <button className="text-xs text-warmOrange underline" onClick={() => removeStudent(s)}>
+                    삭제
+                  </button>
+                </div>
+              )}
             </div>
           ))}
           {students.length === 0 && (
