@@ -28,3 +28,17 @@ export async function checkAndUpdateGarden(classId, dateId) {
   await setDoc(gardenRef, { flowerDates: arrayUnion(dateId) }, { merge: true })
   return true
 }
+
+// 학급 인원 1명이 "한 판"(정시 등교 STAMPS_PER_STAGE회) 채우는 걸 기준으로 한 단계 성장한다고 본다.
+// 나중에 실제 성장 단계(새싹→꽃→나무)를 붙일 때 이 숫자만 조정하면 된다.
+export const STAMPS_PER_STAGE_PER_STUDENT = 5
+
+/** 공동 스탬프 개수와 학급 인원수로 "다음 성장까지 몇 개 남았는지" 계산한다. */
+export function computeGardenStage(gardenStamps = 0, classSize = 1) {
+  const size = Math.max(1, classSize || 1)
+  const stageThreshold = size * STAMPS_PER_STAGE_PER_STUDENT
+  const stage = Math.floor(gardenStamps / stageThreshold)
+  const progress = gardenStamps % stageThreshold
+  const remaining = stageThreshold - progress
+  return { stage, stageThreshold, progress, remaining }
+}

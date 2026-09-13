@@ -173,12 +173,22 @@ function MascotTab({ classId, classDoc }) {
 function ClassInfoTab({ classDoc, patchClass }) {
   const [name, setName] = useState(classDoc.name || '')
   const [saved, setSaved] = useState(false)
+  const [classSize, setClassSize] = useState(classDoc.classSize || 23)
+  const [sizeSaved, setSizeSaved] = useState(false)
 
   async function save() {
     if (!name.trim()) return
     await patchClass({ name: name.trim() })
     setSaved(true)
     setTimeout(() => setSaved(false), 1500)
+  }
+
+  async function saveClassSize() {
+    const n = Number(classSize)
+    if (!n || n < 1) return
+    await patchClass({ classSize: n })
+    setSizeSaved(true)
+    setTimeout(() => setSizeSaved(false), 1500)
   }
 
   return (
@@ -206,6 +216,27 @@ function ClassInfoTab({ classDoc, patchClass }) {
         <p className="text-xs text-ink/50 mt-2">
           학생들이 로그인할 때 이 코드를 입력하거나, 교사 대시보드의 QR코드를 스캔하면 자동으로 입력돼요.
         </p>
+      </Card>
+
+      <Card>
+        <p className="text-sm font-semibold mb-2">학생 인원수</p>
+        <p className="text-xs text-ink/50 mb-3">
+          우리 반 정원이 다음 단계로 자라는 데 필요한 공동 스탬프 수를 계산할 때 사용해요.
+        </p>
+        <div className="flex gap-2 items-center">
+          <input
+            type="number"
+            min="1"
+            value={classSize}
+            onChange={(e) => setClassSize(e.target.value)}
+            className="w-24 rounded-xl2 border border-sage-light px-3 py-2 bg-white/70 outline-none focus:border-sage text-sm"
+          />
+          <span className="text-sm text-ink/60">명</span>
+          <SpringButton onClick={saveClassSize} className="text-sm px-4 py-2">
+            저장
+          </SpringButton>
+        </div>
+        {sizeSaved && <p className="text-xs text-sage-dark mt-2">저장했어요!</p>}
       </Card>
     </div>
   )

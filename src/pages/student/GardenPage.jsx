@@ -1,10 +1,19 @@
+import { useFirestoreDoc } from '../../hooks/useFirestore'
+import { computeGardenStage } from '../../lib/garden'
 import Card from '../../components/ui/Card'
 
 /**
- * 우리 반 정원 — 1단계: 탭과 화면만. 성장/업적/보상 로직은 다음 단계에서 추가한다.
- * 지금은 항상 "아직 아무것도 없는 빈 정원" 모습만 보여준다.
+ * 우리 반 정원 — 개인 출석 스탬프와 별개로 쌓이는 학급 공동 스탬프를 보여준다.
+ * (정원이 실제로 자라는 모습/단계별 그림은 다음 단계에서 추가 — 지금은 숫자만 정확히 보여준다.)
  */
-export default function GardenPage() {
+export default function GardenPage({ session }) {
+  const { classId } = session
+  const { data: classDoc } = useFirestoreDoc(['classes', classId])
+
+  const gardenStamps = classDoc?.gardenStamps || 0
+  const classSize = classDoc?.classSize || 23
+  const { stage, stageThreshold, progress, remaining } = computeGardenStage(gardenStamps, classSize)
+
   return (
     <div className="px-5 pt-8 pb-4 flex flex-col gap-4">
       <h1 className="font-round text-xl font-bold text-center">우리 반 정원</h1>
@@ -12,6 +21,16 @@ export default function GardenPage() {
 
       <Card className="flex items-center justify-center p-4">
         <EmptyGarden />
+      </Card>
+
+      <Card className="flex flex-col items-center gap-1">
+        <p className="text-xs text-ink/50">우리 반 공동 스탬프</p>
+        <p className="text-3xl font-round font-bold text-sage-dark">{gardenStamps}개</p>
+        <p className="text-xs text-ink/60 mt-1">
+          다음 성장까지 <span className="font-semibold text-warmOrange">{remaining}개</span> 남았어요
+          ({progress}/{stageThreshold})
+        </p>
+        {stage > 0 && <p className="text-[11px] text-ink/40 mt-1">지금까지 {stage}단계 성장했어요</p>}
       </Card>
     </div>
   )

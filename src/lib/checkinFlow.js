@@ -2,6 +2,7 @@ import {
   collection,
   doc,
   getDocs,
+  increment,
   orderBy,
   query,
   runTransaction,
@@ -62,10 +63,11 @@ export async function finalizeCheckin({ classId, studentId, dateId, mood, answer
   const checkinRef = doc(db, 'classes', classId, 'checkins', `${dateId}_${studentId}`)
   const studentRef = doc(db, 'classes', classId, 'students', studentId)
   const settingsRef = doc(db, 'classes', classId, 'settings', 'config')
+  const classRef = doc(db, 'classes', classId)
   const badgesSnap = await getDocs(collection(db, 'classes', classId, 'badges'))
   const badgeCatalog = badgesSnap.docs.map((d) => ({ id: d.id, ...d.data() }))
 
-  return runTransaction(db, async (tx) => {
+  const result = await runTransaction(db, async (tx) => {
     const checkinSnap = await tx.get(checkinRef)
     if (!checkinSnap.exists()) throw new Error('출결 체크가 먼저 필요해요.')
     const checkin = checkinSnap.data()
@@ -80,7 +82,7 @@ export async function finalizeCheckin({ classId, studentId, dateId, mood, answer
         questionId: questionId || checkin.questionId || null,
         questionText: questionText || checkin.questionText || null,
       })
-      return { newlyUnlocked: [] }
+      return { newlyUnlocked: [], attendanceStamp: false }
     }
 
     const studentSnap = await tx.get(studentRef)
@@ -119,8 +121,17 @@ export async function finalizeCheckin({ classId, studentId, dateId, mood, answer
       stamps: { attendance: attendanceStamp, answer: answerStamp },
     })
 
-    return { newlyUnlocked }
+    return { newlyUnlocked, attendanceStamp }
   })
+
+  // 학급 공동 정원 스탬프는 학생의 체크인 완료와 분리된 별도 쓰기다 — 일부러 위 트랜잭션
+  // 밖에서, 실패해도 무시하도록 처리한다. 정원 스탬프 권한 설정이 안 되어 있어도
+  // 학생의 체크인 자체(더 중요한 기능)는 항상 정상적으로 끝나야 하기 때문.
+  if (result.attendanceStamp) {
+    updateDoc(classRef, { gardenStamps: increment(1) }).catch(() => {})
+  }
+
+  return result
 }
 
 /** 학생이 교사의 답장에 다시 답장을 남긴다 (날짜 제한 없이 언제든 가능). */

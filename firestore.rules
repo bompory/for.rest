@@ -15,7 +15,10 @@ service cloud.firestore {
 
     match /classes/{classId} {
       allow read: if signedIn();
-      allow write: if isTeacher(classId);
+      // 학생 체크인이 확정될 때 공동 정원 스탬프(gardenStamps)만 예외적으로 올릴 수 있게 허용.
+      // 그 외 학급 문서 필드(이름/코드/입실코드 등)는 여전히 담임교사만 수정 가능.
+      allow write: if isTeacher(classId) ||
+        (signedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['gardenStamps']));
 
       match /settings/{docId} {
         allow read: if signedIn();
