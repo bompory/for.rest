@@ -1,0 +1,33 @@
+{
+  "name": "johoe-johoe",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "seed": "node src/seed/seedDemoData.mjs"
+  },
+  "dependencies": {
+    "dayjs": "^1.11.13",
+    "firebase": "^10.14.1",
+    "framer-motion": "^11.11.17",
+    "qrcode": "^1.5.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.3",
+    "autoprefixer": "^10.4.20",
+    "firebase-admin": "^12.7.0",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.14",
+    "vite": "^5.4.10"
+  },
+  "allowScripts": {
+    "esbuild@0.21.5": true,
+    "protobufjs@7.6.6": true
+  }
+}

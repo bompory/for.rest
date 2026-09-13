@@ -1,0 +1,77 @@
+rules_version = '2';
+
+// 학생은 개인별 Firebase Auth 계정이 없어 익명 인증(signInAnonymously)으로 로그인합니다.
+// 따라서 "학생 본인"까지는 서버 규칙으로 구분할 수 없고, "로그인된 사용자(익명 포함) vs
+// 이 학급의 담임교사(classId == teacherUid)"까지만 구분합니다. 상세 내용은 PROMPT/구현 계획의
+// "보안 스코프 안내" 참고 — 교실 단일 학급 스코프에서는 합리적인 트레이드오프입니다.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isTeacher(classId) {
+      return signedIn() && request.auth.uid == classId;
+    }
+
+    match /classes/{classId} {
+      allow read: if signedIn();
+      allow write: if isTeacher(classId);
+
+      match /settings/{docId} {
+        allow read: if signedIn();
+        allow write: if isTeacher(classId);
+      }
+
+      match /badges/{badgeId} {
+        allow read: if signedIn();
+        allow write: if isTeacher(classId);
+      }
+
+      match /questions/{questionId} {
+        allow read: if signedIn();
+        allow write: if isTeacher(classId);
+      }
+
+      match /dailyQuestion/{dateId} {
+        allow read: if signedIn();
+        // 자동 오늘의 질문 로직은 학생 클라이언트에서도 트리거될 수 있음
+        allow write: if signedIn();
+      }
+
+      match /garden/{monthId} {
+        allow read: if signedIn();
+        allow write: if signedIn();
+      }
+
+      match /helpRequests/{requestId} {
+        allow read: if signedIn();
+        allow create: if signedIn();
+        // 상태를 "확인함"으로 바꾸는 것은 교사만
+        allow update: if isTeacher(classId);
+        allow delete: if isTeacher(classId);
+      }
+
+      match /checkins/{checkinId} {
+        allow read: if signedIn();
+        // 체크인 생성/수정은 학생 본인(익명) 또는 교사(대신 체크) 모두 가능
+        allow create, update: if signedIn();
+        allow delete: if isTeacher(classId);
+      }
+
+      match /students/{studentId} {
+        allow read: if signedIn();
+        allow create, delete: if isTeacher(classId);
+        // 학생 로그인 흐름(체크인 완료 시 totalStamps 등 롤업 필드 갱신)은 학생 클라이언트에서 발생하므로
+        // 해당 필드만 예외적으로 허용하고, 이름/PIN/활성여부 등은 교사만 바꿀 수 있게 제한한다.
+        allow update: if isTeacher(classId) ||
+          (signedIn() &&
+            request.resource.data.diff(resource.data).affectedKeys()
+              .hasOnly(['totalStamps', 'lateCountTotal', 'onTimeStreak', 'last7LateFlags', 'last7AnswerLengths', 'unlockedBadgeIds']));
+
+        match /notes/{noteId} {
+          allow read, write: if isTeacher(classId);
+        }
+      }
+    }
+  }
+}
