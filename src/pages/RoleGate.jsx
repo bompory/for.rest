@@ -1,6 +1,7 @@
 import { Navigate, useNavigate } from 'react-router-dom'
 import SpringButton from '../components/ui/SpringButton'
 import Mascot from '../components/mascot/Mascot'
+import AppTitle from '../components/ui/AppTitle'
 
 export default function RoleGate({ teacher, session }) {
   const navigate = useNavigate()
@@ -11,7 +12,7 @@ export default function RoleGate({ teacher, session }) {
     <div className="min-h-screen flex flex-col items-center justify-center gap-8 px-6 text-center">
       <Mascot mood="happy" size={140} bounce />
       <div>
-        <h1 className="font-round text-3xl font-bold text-ink">조회조회</h1>
+        <AppTitle size="text-3xl" />
         <p className="mt-2 text-sm text-ink/70 max-w-xs">
           아침에 모이는 조회(朝會)에서, 아이의 하루를 비춰보는 조회(照會)로.
         </p>

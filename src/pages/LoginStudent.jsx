@@ -8,6 +8,7 @@ import SpringButton from '../components/ui/SpringButton'
 import Card from '../components/ui/Card'
 import Mascot from '../components/mascot/Mascot'
 import AuthRoleTabs from '../components/auth/AuthRoleTabs'
+import AppTitle from '../components/ui/AppTitle'
 
 const STEPS = { CODE: 'code', NAME: 'name', PIN: 'pin' }
 
@@ -176,7 +177,7 @@ export default function LoginStudent() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 gap-6">
-      <h1 className="font-round text-2xl font-bold text-sage-dark">조회조회</h1>
+      <AppTitle size="text-2xl" />
       <AuthRoleTabs active="student" />
       <Mascot mood="happy" size={100} />
       <Card className="w-full max-w-sm">

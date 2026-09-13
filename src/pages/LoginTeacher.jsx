@@ -7,6 +7,7 @@ import SpringButton from '../components/ui/SpringButton'
 import Card from '../components/ui/Card'
 import Mascot from '../components/mascot/Mascot'
 import AuthRoleTabs from '../components/auth/AuthRoleTabs'
+import AppTitle from '../components/ui/AppTitle'
 import { defaultQuestionBank } from '../seed/questions'
 import { defaultBadgeCatalog } from '../lib/stamps'
 
@@ -85,7 +86,7 @@ export default function LoginTeacher() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 gap-6">
-      <h1 className="font-round text-2xl font-bold text-sage-dark">조회조회</h1>
+      <AppTitle size="text-2xl" />
       <AuthRoleTabs active="teacher" />
       <Mascot mood="neutral" size={90} />
       <Card className="w-full max-w-sm flex flex-col items-center gap-4">
