@@ -99,12 +99,13 @@ export async function finalizeCheckin({ classId, studentId, dateId, mood, answer
     )
 
     const totalStamps = (student.totalStamps || 0) + earned
+    const totalAnswers = (student.totalAnswers || 0) + (answerStamp ? 1 : 0)
     const newlyUnlocked = resolveNewlyUnlocked(totalStamps, student.unlockedBadgeIds, badgeCatalog)
     const unlockedBadgeIds = [...(student.unlockedBadgeIds || []), ...newlyUnlocked]
 
     tx.set(
       studentRef,
-      { ...rollup, totalStamps, unlockedBadgeIds },
+      { ...rollup, totalStamps, totalAnswers, unlockedBadgeIds },
       { merge: true },
     )
 

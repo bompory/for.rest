@@ -69,7 +69,8 @@ service cloud.firestore {
         allow update: if isTeacher(classId) ||
           (signedIn() &&
             request.resource.data.diff(resource.data).affectedKeys()
-              .hasOnly(['totalStamps', 'lateCountTotal', 'onTimeStreak', 'last7LateFlags', 'last7AnswerLengths', 'unlockedBadgeIds']));
+              .hasOnly(['totalStamps', 'lateCountTotal', 'onTimeStreak', 'last7LateFlags', 'last7AnswerLengths',
+                        'unlockedBadgeIds', 'totalOnTimeDays', 'bestOnTimeStreak', 'recoveryCount', 'totalAnswers']));
 
         match /notes/{noteId} {
           allow read, write: if isTeacher(classId);

@@ -2,6 +2,7 @@ import { collection, orderBy, query } from 'firebase/firestore'
 import { db } from '../../firebase'
 import { useFirestoreDoc, useFirestoreQuery } from '../../hooks/useFirestore'
 import { toMonthId } from '../../lib/dateUtils'
+import { resolveAchievements } from '../../lib/achievements'
 import Card from '../../components/ui/Card'
 import Creature from '../../components/creatures/CreatureSvgs'
 
@@ -16,6 +17,7 @@ export default function CollectionPage({ session }) {
 
   const unlocked = new Set(student?.unlockedBadgeIds || [])
   const flowerCount = garden?.flowerDates?.length || 0
+  const achievements = student ? resolveAchievements(student, badges) : []
 
   return (
     <div className="px-5 pt-8 pb-4 flex flex-col gap-4">
@@ -44,6 +46,20 @@ export default function CollectionPage({ session }) {
             </Card>
           )
         })}
+      </div>
+
+      <p className="font-round text-lg font-bold text-center mt-2">업적</p>
+      <div className="grid grid-cols-3 gap-3">
+        {achievements.map((a) => (
+          <Card
+            key={a.id}
+            className={`flex flex-col items-center gap-1 p-3 ${a.unlocked ? '' : 'opacity-40 grayscale'}`}
+          >
+            <span className="text-3xl">{a.icon}</span>
+            <span className="text-xs font-semibold text-center">{a.label}</span>
+            <span className="text-[10px] text-ink/50 text-center">{a.description}</span>
+          </Card>
+        ))}
       </div>
     </div>
   )

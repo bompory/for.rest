@@ -140,24 +140,38 @@ export function computeStudentRollupUpdate(prevStudent, { status, answerLength =
 
   let lateCountTotal = prevStudent.lateCountTotal || 0
   let onTimeStreak = prevStudent.onTimeStreak || 0
+  let totalOnTimeDays = prevStudent.totalOnTimeDays || 0
+  let recoveryCount = prevStudent.recoveryCount || 0
 
   if (late) {
     lateCountTotal += 1
     onTimeStreak = 0
   } else if (onTime) {
     onTimeStreak += 1
+    totalOnTimeDays += 1
     if (settings?.recoveryEnabled && onTimeStreak >= (settings.recoveryStreakDays || 5)) {
       lateCountTotal = Math.max(0, lateCountTotal - (settings.recoveryDeductCount || 1))
       onTimeStreak = 0
+      recoveryCount += 1
     }
   } else if (!excluded) {
     onTimeStreak = 0
   }
 
+  const bestOnTimeStreak = Math.max(prevStudent.bestOnTimeStreak || 0, onTimeStreak)
+
   const last7LateFlags = [...(prevStudent.last7LateFlags || []), late].slice(-7)
   const last7AnswerLengths = [...(prevStudent.last7AnswerLengths || []), answerLength].slice(-7)
 
-  return { lateCountTotal, onTimeStreak, last7LateFlags, last7AnswerLengths }
+  return {
+    lateCountTotal,
+    onTimeStreak,
+    last7LateFlags,
+    last7AnswerLengths,
+    totalOnTimeDays,
+    bestOnTimeStreak,
+    recoveryCount,
+  }
 }
 
 /**

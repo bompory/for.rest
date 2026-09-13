@@ -17,6 +17,7 @@ import ParticleBurst from '../../components/ui/ParticleBurst'
 import stickerOnTime from '../../assets/sticker-ontime.png'
 import stickerLate from '../../assets/sticker-late.png'
 import stickerAnswer from '../../assets/sticker-answer.png'
+import stickerWelcome from '../../assets/sticker-welcome.png'
 
 export default function CheckinPage({ session }) {
   const { classId, studentId, studentName } = session
@@ -118,8 +119,8 @@ export default function CheckinPage({ session }) {
     }
   }
 
-  async function handleComplete(skipAnswer) {
-    if (!mood) return
+  async function handleComplete() {
+    if (!mood || !answer.trim()) return
     setBusy(true)
     try {
       const { newlyUnlocked } = await finalizeCheckin({
@@ -127,7 +128,7 @@ export default function CheckinPage({ session }) {
         studentId,
         dateId,
         mood,
-        answer: skipAnswer ? null : answer,
+        answer,
         questionId: question?.id,
         questionText: question?.text,
       })
@@ -136,7 +137,7 @@ export default function CheckinPage({ session }) {
       if (newlyUnlocked?.length) {
         // 도감 해금 축하가 더 큰 이벤트라 겹치지 않게 그것부터 보여준다
         setUnlockedCelebration(newlyUnlocked)
-      } else if (!skipAnswer && answer.trim()) {
+      } else {
         setShowAnswerSticker(true)
       }
     } finally {
@@ -150,7 +151,7 @@ export default function CheckinPage({ session }) {
       <MascotGreeting
         mood={checkin ? moodFromEmojiKey(mood || (checkin.status === 'late' ? 'okay' : 'good')) : 'happy'}
         message={greetingMsg}
-        imageSrc={checkin ? (checkin.status === 'late' ? stickerLateSrc : stickerAnswerSrc) : undefined}
+        imageSrc={checkin ? (checkin.status === 'late' ? stickerLateSrc : stickerAnswerSrc) : stickerWelcome}
       />
 
       {!isChecked && (
@@ -182,19 +183,18 @@ export default function CheckinPage({ session }) {
                 value={answer}
                 onChange={(e) => setAnswer(e.target.value)}
                 rows={3}
-                placeholder="2~3줄로 편하게 적어줘 (안 써도 괜찮아)"
+                placeholder="2~3줄로 오늘 하루를 적어줘"
                 className="w-full rounded-xl2 border border-sage-light px-3 py-2 bg-white/70 outline-none focus:border-sage resize-none text-sm"
               />
             </div>
           )}
-          <div className="flex gap-2">
-            <SpringButton variant="outline" className="flex-1" onClick={() => handleComplete(true)} disabled={!mood || busy}>
-              답변 건너뛰기
-            </SpringButton>
-            <SpringButton variant="sage" className="flex-1" onClick={() => handleComplete(false)} disabled={!mood || busy}>
-              완료!
-            </SpringButton>
-          </div>
+          <SpringButton
+            variant="sage"
+            onClick={handleComplete}
+            disabled={!mood || !answer.trim() || busy}
+          >
+            완료!
+          </SpringButton>
         </Card>
       )}
 
@@ -206,7 +206,7 @@ export default function CheckinPage({ session }) {
               alt={checkin.status === 'late' ? '지각 스티커' : '정상출석 스티커'}
               className="w-16 h-16 object-contain"
             />
-            <p className="text-center text-sm font-semibold text-sage-dark">오늘 체크인 다 했어요 🌿</p>
+            <p className="text-center text-sm font-semibold text-sage-dark">오늘 체크인 다 했어요</p>
           </div>
           <div className="flex justify-center">
             <EmojiPicker value={mood} onChange={setMood} />

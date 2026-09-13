@@ -144,7 +144,7 @@ function RecordCard({ classId, studentId, checkin: c, isToday }) {
               <button className="text-xs text-ink/50 underline" onClick={() => setEditing(false)}>
                 취소
               </button>
-              <SpringButton onClick={saveAnswer} disabled={saving} className="text-xs px-3 py-1.5">
+              <SpringButton onClick={saveAnswer} disabled={saving || !answerDraft.trim()} className="text-xs px-3 py-1.5">
                 저장
               </SpringButton>
             </div>
