@@ -29,16 +29,37 @@ export async function checkAndUpdateGarden(classId, dateId) {
   return true
 }
 
-// 학급 인원 1명이 "한 판"(정시 등교 STAMPS_PER_STAGE회) 채우는 걸 기준으로 한 단계 성장한다고 본다.
-// 나중에 실제 성장 단계(새싹→꽃→나무)를 붙일 때 이 숫자만 조정하면 된다.
-export const STAMPS_PER_STAGE_PER_STUDENT = 5
+export const DEFAULT_GARDEN_TARGET = 1000
 
-/** 공동 스탬프 개수와 학급 인원수로 "다음 성장까지 몇 개 남았는지" 계산한다. */
-export function computeGardenStage(gardenStamps = 0, classSize = 1) {
-  const size = Math.max(1, classSize || 1)
-  const stageThreshold = size * STAMPS_PER_STAGE_PER_STUDENT
-  const stage = Math.floor(gardenStamps / stageThreshold)
-  const progress = gardenStamps % stageThreshold
-  const remaining = stageThreshold - progress
-  return { stage, stageThreshold, progress, remaining }
+// 각 단계는 "목표 스탬프 수"의 비율로 정해진다 — 교사가 목표를 바꾸면 단계 기준도 같이 움직인다.
+// (기본 목표 1000개 기준: 0 / 50 / 100 / 200 / 350 / 500 / 700 / 1000)
+export const GARDEN_STAGES = [
+  { percent: 0, key: 'sprout', label: '새싹' },
+  { percent: 0.05, key: 'flower1', label: '꽃 한 송이' },
+  { percent: 0.1, key: 'tree1', label: '작은 나무' },
+  { percent: 0.2, key: 'flowers2', label: '풍성해진 꽃밭' },
+  { percent: 0.35, key: 'lush', label: '무성한 정원' },
+  { percent: 0.5, key: 'wildlife', label: '나비와 새' },
+  { percent: 0.7, key: 'pond', label: '작은 연못' },
+  { percent: 1, key: 'complete', label: '완성된 정원' },
+]
+
+/** 공동 스탬프 개수와 목표치로 현재 단계 / 다음 단계까지 남은 스탬프를 계산한다. */
+export function computeGardenProgress(gardenStamps = 0, targetStamps = DEFAULT_GARDEN_TARGET) {
+  const target = Math.max(1, targetStamps || DEFAULT_GARDEN_TARGET)
+
+  let stageIndex = 0
+  for (let i = GARDEN_STAGES.length - 1; i >= 0; i--) {
+    if (gardenStamps >= GARDEN_STAGES[i].percent * target) {
+      stageIndex = i
+      break
+    }
+  }
+
+  const stage = GARDEN_STAGES[stageIndex]
+  const nextStage = GARDEN_STAGES[stageIndex + 1] || null
+  const nextThreshold = nextStage ? Math.round(nextStage.percent * target) : null
+  const remaining = nextThreshold != null ? Math.max(0, nextThreshold - gardenStamps) : 0
+
+  return { stageIndex, stage, nextStage, nextThreshold, remaining, target }
 }

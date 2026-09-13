@@ -15,6 +15,7 @@ import { useFirestoreDoc, useFirestoreQuery } from '../../hooks/useFirestore'
 import { MASCOT_SLOTS, resetMascotImage, uploadMascotImage } from '../../lib/mascotUpload'
 import { hashPin } from '../../lib/pinHash'
 import { deleteStudentCompletely } from '../../lib/studentDeletion'
+import { DEFAULT_GARDEN_TARGET } from '../../lib/garden'
 import Card from '../../components/ui/Card'
 import SpringButton from '../../components/ui/SpringButton'
 import stickerOnTimeDefault from '../../assets/sticker-ontime.png'
@@ -175,8 +176,8 @@ function MascotTab({ classId, classDoc }) {
 function ClassInfoTab({ classDoc, patchClass }) {
   const [name, setName] = useState(classDoc.name || '')
   const [saved, setSaved] = useState(false)
-  const [classSize, setClassSize] = useState(classDoc.classSize || 23)
-  const [sizeSaved, setSizeSaved] = useState(false)
+  const [gardenTarget, setGardenTarget] = useState(classDoc.gardenTargetStamps || DEFAULT_GARDEN_TARGET)
+  const [targetSaved, setTargetSaved] = useState(false)
 
   async function save() {
     if (!name.trim()) return
@@ -185,12 +186,12 @@ function ClassInfoTab({ classDoc, patchClass }) {
     setTimeout(() => setSaved(false), 1500)
   }
 
-  async function saveClassSize() {
-    const n = Number(classSize)
+  async function saveGardenTarget() {
+    const n = Number(gardenTarget)
     if (!n || n < 1) return
-    await patchClass({ classSize: n })
-    setSizeSaved(true)
-    setTimeout(() => setSizeSaved(false), 1500)
+    await patchClass({ gardenTargetStamps: n })
+    setTargetSaved(true)
+    setTimeout(() => setTargetSaved(false), 1500)
   }
 
   return (
@@ -221,24 +222,26 @@ function ClassInfoTab({ classDoc, patchClass }) {
       </Card>
 
       <Card>
-        <p className="text-sm font-semibold mb-2">학생 인원수</p>
+        <p className="text-sm font-semibold mb-2">우리 반 정원 목표 스탬프 수</p>
         <p className="text-xs text-ink/50 mb-3">
-          우리 반 정원이 다음 단계로 자라는 데 필요한 공동 스탬프 수를 계산할 때 사용해요.
+          정시 등교할 때마다 쌓이는 학급 공동 스탬프가 이 숫자에 도달하면 정원이 완성돼요.
+          중간 성장 단계(꽃·나무·연못 등)는 이 목표의 5%/10%/20%/35%/50%/70% 지점에서 자동으로
+          나타나요.
         </p>
         <div className="flex gap-2 items-center">
           <input
             type="number"
             min="1"
-            value={classSize}
-            onChange={(e) => setClassSize(e.target.value)}
-            className="w-24 rounded-xl2 border border-sage-light px-3 py-2 bg-white/70 outline-none focus:border-sage text-sm"
+            value={gardenTarget}
+            onChange={(e) => setGardenTarget(e.target.value)}
+            className="w-28 rounded-xl2 border border-sage-light px-3 py-2 bg-white/70 outline-none focus:border-sage text-sm"
           />
-          <span className="text-sm text-ink/60">명</span>
-          <SpringButton onClick={saveClassSize} className="text-sm px-4 py-2">
+          <span className="text-sm text-ink/60">개</span>
+          <SpringButton onClick={saveGardenTarget} className="text-sm px-4 py-2">
             저장
           </SpringButton>
         </div>
-        {sizeSaved && <p className="text-xs text-sage-dark mt-2">저장했어요!</p>}
+        {targetSaved && <p className="text-xs text-sage-dark mt-2">저장했어요!</p>}
       </Card>
     </div>
   )
