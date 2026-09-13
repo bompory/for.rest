@@ -1,7 +1,8 @@
 import { Navigate, useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import SpringButton from '../components/ui/SpringButton'
-import Mascot from '../components/mascot/Mascot'
 import AppTitle from '../components/ui/AppTitle'
+import mascotMain from '../assets/mascot-main.png'
 
 export default function RoleGate({ teacher, session }) {
   const navigate = useNavigate()
@@ -10,7 +11,13 @@ export default function RoleGate({ teacher, session }) {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-8 px-6 text-center">
-      <Mascot mood="happy" size={140} bounce />
+      <motion.img
+        src={mascotMain}
+        alt="조회조회 마스코트"
+        className="w-36 h-36 object-contain"
+        animate={{ y: [0, -10, 0] }}
+        transition={{ duration: 0.9, repeat: Infinity, ease: 'easeInOut' }}
+      />
       <div>
         <AppTitle size="text-3xl" />
         <p className="mt-2 text-sm text-ink/70 max-w-xs">

@@ -14,6 +14,9 @@ import SpringButton from '../../components/ui/SpringButton'
 import Modal from '../../components/ui/Modal'
 import EmojiPicker from '../../components/ui/EmojiPicker'
 import ParticleBurst from '../../components/ui/ParticleBurst'
+import stickerOnTime from '../../assets/sticker-ontime.png'
+import stickerLate from '../../assets/sticker-late.png'
+import stickerAnswer from '../../assets/sticker-answer.png'
 
 export default function CheckinPage({ session }) {
   const { classId, studentId, studentName } = session
@@ -35,6 +38,7 @@ export default function CheckinPage({ session }) {
   const [greetingMsg, setGreetingMsg] = useState('')
   const [burst, setBurst] = useState(false)
   const [unlockedCelebration, setUnlockedCelebration] = useState(null)
+  const [showAnswerSticker, setShowAnswerSticker] = useState(false)
 
   useEffect(() => {
     if (checkin?.mood) setMood(checkin.mood)
@@ -127,7 +131,10 @@ export default function CheckinPage({ session }) {
       setBurst(true)
       setTimeout(() => setBurst(false), 1200)
       if (newlyUnlocked?.length) {
+        // 도감 해금 축하가 더 큰 이벤트라 겹치지 않게 그것부터 보여준다
         setUnlockedCelebration(newlyUnlocked)
+      } else if (!skipAnswer && answer.trim()) {
+        setShowAnswerSticker(true)
       }
     } finally {
       setBusy(false)
@@ -150,9 +157,16 @@ export default function CheckinPage({ session }) {
 
       {isChecked && !isFinalized && (
         <Card className="w-full max-w-sm flex flex-col gap-4">
-          <p className="text-center text-sm text-ink/70">
-            {checkin.status === 'late' ? '조금 늦었지만 체크인 완료!' : '오늘도 정시 체크인 완료!'}
-          </p>
+          <div className="flex flex-col items-center gap-1">
+            <img
+              src={checkin.status === 'late' ? stickerLate : stickerOnTime}
+              alt={checkin.status === 'late' ? '지각 스티커' : '정상출석 스티커'}
+              className="w-20 h-20 object-contain"
+            />
+            <p className="text-center text-sm text-ink/70">
+              {checkin.status === 'late' ? '조금 늦었지만 체크인 완료!' : '오늘도 정시 체크인 완료!'}
+            </p>
+          </div>
           <div>
             <p className="text-sm font-semibold mb-2">오늘 기분은 어때?</p>
             <EmojiPicker value={mood} onChange={setMood} />
@@ -182,7 +196,14 @@ export default function CheckinPage({ session }) {
 
       {isFinalized && (
         <Card className="w-full max-w-sm flex flex-col gap-3">
-          <p className="text-center text-sm font-semibold text-sage-dark">오늘 체크인 다 했어요 🌿</p>
+          <div className="flex flex-col items-center gap-1">
+            <img
+              src={checkin.status === 'late' ? stickerLate : stickerOnTime}
+              alt={checkin.status === 'late' ? '지각 스티커' : '정상출석 스티커'}
+              className="w-16 h-16 object-contain"
+            />
+            <p className="text-center text-sm font-semibold text-sage-dark">오늘 체크인 다 했어요 🌿</p>
+          </div>
           <div className="flex justify-center">
             <EmojiPicker value={mood} onChange={setMood} />
           </div>
@@ -226,6 +247,14 @@ export default function CheckinPage({ session }) {
             확인
           </SpringButton>
         </form>
+      </Modal>
+
+      <Modal open={showAnswerSticker} onClose={() => setShowAnswerSticker(false)}>
+        <div className="flex flex-col items-center gap-3 py-2 text-center">
+          <img src={stickerAnswer} alt="답변 작성 완료 스티커" className="w-28 h-28 object-contain" />
+          <p className="font-body">{pickMessage('answerDone', studentName)}</p>
+          <SpringButton onClick={() => setShowAnswerSticker(false)}>닫기</SpringButton>
+        </div>
       </Modal>
 
       <Modal open={!!unlockedCelebration} onClose={() => setUnlockedCelebration(null)} title="도감 등록!">

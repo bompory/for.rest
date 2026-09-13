@@ -48,6 +48,12 @@ const POOLS = {
     `오늘은 패스! 다음에 얘기해줘도 괜찮아~`,
     `${name}, 마음 내킬 때 다시 써도 돼.`,
   ],
+  answerDone: (name) => [
+    `${name}, 오늘 이야기 들려줘서 고마워!`,
+    `잘 썼다-! 오늘도 기록 완성!`,
+    `${name}의 하루, 잘 읽었어~`,
+    `이렇게 매일 쌓이는 게 진짜 멋진 거야!`,
+  ],
 }
 
 export function pickMessage(situation, name = '') {
