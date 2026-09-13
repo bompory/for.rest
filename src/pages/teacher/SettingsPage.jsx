@@ -15,16 +15,21 @@ import { useFirestoreDoc, useFirestoreQuery } from '../../hooks/useFirestore'
 import Card from '../../components/ui/Card'
 import SpringButton from '../../components/ui/SpringButton'
 
-const TABS = ['지각 규칙', '수업일', '질문 관리', '학생 명단']
+const TABS = ['학급 정보', '지각 규칙', '수업일', '질문 관리', '학생 명단']
 
 export default function SettingsPage({ teacher }) {
   const classId = teacher.uid
   const navigate = useNavigate()
   const [tab, setTab] = useState(TABS[0])
+  const { data: classDoc } = useFirestoreDoc(['classes', classId])
   const { data: settings } = useFirestoreDoc(['classes', classId, 'settings', 'config'])
 
   function patchSettings(patch) {
     return setDoc(doc(db, 'classes', classId, 'settings', 'config'), patch, { merge: true })
+  }
+
+  function patchClass(patch) {
+    return setDoc(doc(db, 'classes', classId), patch, { merge: true })
   }
 
   return (
@@ -49,16 +54,65 @@ export default function SettingsPage({ teacher }) {
         ))}
       </div>
 
-      {!settings ? (
-        <p className="text-sm text-ink/50">불러오는 중...</p>
-      ) : (
-        <>
-          {tab === '지각 규칙' && <LateRulesTab settings={settings} patchSettings={patchSettings} />}
-          {tab === '수업일' && <SchoolDaysTab settings={settings} patchSettings={patchSettings} />}
-          {tab === '질문 관리' && <QuestionsTab classId={classId} settings={settings} patchSettings={patchSettings} />}
-          {tab === '학생 명단' && <StudentsTab classId={classId} />}
-        </>
-      )}
+      {tab === '학급 정보' &&
+        (!classDoc ? (
+          <p className="text-sm text-ink/50">불러오는 중...</p>
+        ) : (
+          <ClassInfoTab classDoc={classDoc} patchClass={patchClass} />
+        ))}
+
+      {tab !== '학급 정보' &&
+        (!settings ? (
+          <p className="text-sm text-ink/50">불러오는 중...</p>
+        ) : (
+          <>
+            {tab === '지각 규칙' && <LateRulesTab settings={settings} patchSettings={patchSettings} />}
+            {tab === '수업일' && <SchoolDaysTab settings={settings} patchSettings={patchSettings} />}
+            {tab === '질문 관리' && <QuestionsTab classId={classId} settings={settings} patchSettings={patchSettings} />}
+            {tab === '학생 명단' && <StudentsTab classId={classId} />}
+          </>
+        ))}
+    </div>
+  )
+}
+
+function ClassInfoTab({ classDoc, patchClass }) {
+  const [name, setName] = useState(classDoc.name || '')
+  const [saved, setSaved] = useState(false)
+
+  async function save() {
+    if (!name.trim()) return
+    await patchClass({ name: name.trim() })
+    setSaved(true)
+    setTimeout(() => setSaved(false), 1500)
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <Card>
+        <p className="text-sm font-semibold mb-2">학급 이름</p>
+        <p className="text-xs text-ink/50 mb-3">예: "3학년 2반" — 대시보드 상단과 학생 화면에 표시돼요.</p>
+        <div className="flex gap-2">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="예: 3학년 2반"
+            className="flex-1 rounded-xl2 border border-sage-light px-3 py-2 bg-white/70 outline-none focus:border-sage text-sm"
+          />
+          <SpringButton onClick={save} className="text-sm px-4 py-2">
+            저장
+          </SpringButton>
+        </div>
+        {saved && <p className="text-xs text-sage-dark mt-2">저장했어요!</p>}
+      </Card>
+
+      <Card>
+        <p className="text-sm font-semibold mb-1">학급코드 (학생 로그인용)</p>
+        <p className="font-round text-2xl text-sage-dark tracking-widest">{classDoc.classCode}</p>
+        <p className="text-xs text-ink/50 mt-2">
+          학생들이 로그인할 때 이 코드를 입력하거나, 교사 대시보드의 QR코드를 스캔하면 자동으로 입력돼요.
+        </p>
+      </Card>
     </div>
   )
 }
