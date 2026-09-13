@@ -2,6 +2,7 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import SpringButton from '../components/ui/SpringButton'
 import AppTitle from '../components/ui/AppTitle'
 import MascotHero from '../components/mascot/MascotHero'
+import LegalFooter from '../components/legal/LegalFooter'
 
 export default function RoleGate({ teacher, session }) {
   const navigate = useNavigate()
@@ -25,6 +26,7 @@ export default function RoleGate({ teacher, session }) {
           교사로 로그인
         </SpringButton>
       </div>
+      <LegalFooter />
     </div>
   )
 }

@@ -6,6 +6,7 @@ import { useStudentSession } from '../../hooks/useStudentSession'
 import Modal from '../../components/ui/Modal'
 import SpringButton from '../../components/ui/SpringButton'
 import { pickMessage } from '../../lib/messages'
+import LegalFooter from '../../components/legal/LegalFooter'
 
 const TABS = [
   { to: 'checkin', label: '체크인', icon: '🏠' },
@@ -61,6 +62,7 @@ export default function StudentShell({ session }) {
       </div>
       <div className="flex-1 overflow-y-auto pb-24">
         <Outlet />
+        <LegalFooter />
       </div>
 
       <button

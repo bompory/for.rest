@@ -28,3 +28,66 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* 이용약관/개인정보처리방침 팝업의 마크다운 렌더링 스타일 */
+.legal-content {
+  text-align: left;
+}
+.legal-content h1 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0.2rem 0 0.8rem;
+}
+.legal-content h2 {
+  font-size: 0.98rem;
+  font-weight: 700;
+  margin: 1.2rem 0 0.5rem;
+  color: #5B4A3F;
+}
+.legal-content h3 {
+  font-size: 0.92rem;
+  font-weight: 700;
+  margin: 1rem 0 0.4rem;
+}
+.legal-content p {
+  margin: 0 0 0.7rem;
+}
+.legal-content ul, .legal-content ol {
+  margin: 0 0 0.7rem 1.2rem;
+  padding: 0;
+}
+.legal-content li {
+  margin-bottom: 0.3rem;
+}
+.legal-content blockquote {
+  border-left: 3px solid #F2994A;
+  background: #FBE0C6;
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+  margin: 0 0 0.8rem;
+  color: #5B4A3F;
+  font-size: 0.85rem;
+}
+.legal-content strong {
+  font-weight: 700;
+  color: #EFA871;
+}
+.legal-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0 0 0.8rem;
+  font-size: 0.82rem;
+}
+.legal-content th, .legal-content td {
+  border: 1px solid #D7E8D3;
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+}
+.legal-content th {
+  background: #D7E8D3;
+}
+.legal-content hr {
+  border: none;
+  border-top: 1px solid #D7E8D3;
+  margin: 1rem 0;
+}

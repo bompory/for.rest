@@ -13,6 +13,7 @@ import SpringButton from '../../components/ui/SpringButton'
 import Modal from '../../components/ui/Modal'
 import Mascot from '../../components/mascot/Mascot'
 import JoinQrCode from '../../components/ui/JoinQrCode'
+import LegalFooter from '../../components/legal/LegalFooter'
 
 const STATUS_OPTIONS = [
   { value: 'onTime', label: '정상' },
@@ -239,6 +240,7 @@ export default function TeacherDashboard({ teacher }) {
       <div className="flex justify-center opacity-60">
         <Mascot mood="neutral" size={50} />
       </div>
+      <LegalFooter />
     </div>
   )
 }

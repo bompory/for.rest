@@ -9,6 +9,7 @@ import Card from '../components/ui/Card'
 import MascotHero from '../components/mascot/MascotHero'
 import AuthRoleTabs from '../components/auth/AuthRoleTabs'
 import AppTitle from '../components/ui/AppTitle'
+import LegalFooter from '../components/legal/LegalFooter'
 
 const STEPS = { CODE: 'code', NAME: 'name', PIN: 'pin' }
 
@@ -293,6 +294,7 @@ export default function LoginStudent() {
           </form>
         )}
       </Card>
+      <LegalFooter />
     </div>
   )
 }
