@@ -6,6 +6,7 @@ import { auth, db } from '../firebase'
 import SpringButton from '../components/ui/SpringButton'
 import Card from '../components/ui/Card'
 import Mascot from '../components/mascot/Mascot'
+import AuthRoleTabs from '../components/auth/AuthRoleTabs'
 import { defaultQuestionBank } from '../seed/questions'
 import { defaultBadgeCatalog } from '../lib/stamps'
 
@@ -84,9 +85,11 @@ export default function LoginTeacher() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 gap-6">
+      <h1 className="font-round text-2xl font-bold text-sage-dark">조회조회</h1>
+      <AuthRoleTabs active="teacher" />
       <Mascot mood="neutral" size={90} />
       <Card className="w-full max-w-sm flex flex-col items-center gap-4">
-        <h1 className="font-round text-xl font-bold text-center">교사 로그인</h1>
+        <h2 className="font-round text-xl font-bold text-center">교사 로그인</h2>
         <p className="text-sm text-ink/60 text-center">
           구글 계정으로 로그인하면 처음 한 번, 학급과 기본 설정이 자동으로 만들어져요.
         </p>
@@ -95,13 +98,6 @@ export default function LoginTeacher() {
           구글로 로그인
         </SpringButton>
         {error && <p className="text-warmOrange text-sm">{error}</p>}
-        <button
-          type="button"
-          className="text-xs text-ink/60 underline"
-          onClick={() => navigate('/login/student')}
-        >
-          학생인가요? 학생 로그인으로 이동
-        </button>
       </Card>
     </div>
   )

@@ -7,6 +7,7 @@ import { useStudentSession } from '../hooks/useStudentSession'
 import SpringButton from '../components/ui/SpringButton'
 import Card from '../components/ui/Card'
 import Mascot from '../components/mascot/Mascot'
+import AuthRoleTabs from '../components/auth/AuthRoleTabs'
 
 const STEPS = { CODE: 'code', NAME: 'name', PIN: 'pin' }
 
@@ -175,11 +176,13 @@ export default function LoginStudent() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 gap-6">
+      <h1 className="font-round text-2xl font-bold text-sage-dark">조회조회</h1>
+      <AuthRoleTabs active="student" />
       <Mascot mood="happy" size={100} />
       <Card className="w-full max-w-sm">
         {step === STEPS.CODE && (
           <form onSubmit={handleCodeSubmit} className="flex flex-col gap-3">
-            <h1 className="font-round text-lg font-bold text-center mb-1">학급코드를 입력해줘</h1>
+            <h2 className="font-round text-lg font-bold text-center mb-1">학급코드를 입력해줘</h2>
             <input
               autoFocus
               required
@@ -197,7 +200,7 @@ export default function LoginStudent() {
 
         {step === STEPS.NAME && (
           <form onSubmit={handleNameSubmit} className="flex flex-col gap-3">
-            <h1 className="font-round text-lg font-bold text-center mb-1">내 이름을 입력해줘</h1>
+            <h2 className="font-round text-lg font-bold text-center mb-1">내 이름을 입력해줘</h2>
             <p className="text-xs text-ink/50 text-center">
               처음이면 이름이 자동으로 등록되고, 이미 등록했으면 그대로 로그인돼요.
             </p>
@@ -223,9 +226,9 @@ export default function LoginStudent() {
           <form onSubmit={handlePinSubmit} className="flex flex-col gap-3">
             {matchedStudent ? (
               <>
-                <h1 className="font-round text-lg font-bold text-center mb-1">
+                <h2 className="font-round text-lg font-bold text-center mb-1">
                   {matchedStudent.name}, PIN 4자리를 입력해줘
-                </h1>
+                </h2>
                 <input
                   autoFocus
                   required
@@ -240,9 +243,9 @@ export default function LoginStudent() {
               </>
             ) : (
               <>
-                <h1 className="font-round text-lg font-bold text-center mb-1">
+                <h2 className="font-round text-lg font-bold text-center mb-1">
                   {nameInput.trim()}, 처음이구나! PIN 4자리를 정해줘
-                </h1>
+                </h2>
                 <p className="text-xs text-ink/50 text-center">
                   다음에 들어올 때도 이 PIN을 써야 하니 잊지 않게 잘 기억해줘.
                 </p>
@@ -289,15 +292,6 @@ export default function LoginStudent() {
           </form>
         )}
       </Card>
-      {step === STEPS.CODE && (
-        <button
-          type="button"
-          className="text-xs text-ink/60 underline"
-          onClick={() => navigate('/login/teacher')}
-        >
-          선생님이신가요? 교사 로그인으로 이동
-        </button>
-      )}
     </div>
   )
 }
