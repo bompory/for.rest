@@ -1,4 +1,4 @@
-import { doc, getDocFromServer, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
+import { doc, onSnapshot, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import { isAfterThreshold, toDateId } from './dateUtils'
 
@@ -15,8 +15,43 @@ export const STATUS = {
 const LATE_COUNT_EXCLUDED = new Set([STATUS.SICK, STATUS.FIELD_TRIP, STATUS.EARLY_LEAVE])
 
 /**
- * 학생 셀프 체크인: serverTimestamp로 문서를 먼저 쓰고, 서버에서 강제로 재조회해
- * 실제 서버 시각을 확보한 뒤에야 onTime/late를 확정한다. 기기 시계는 어디에서도 사용하지 않는다.
+ * serverTimestamp()로 쓴 필드가 실제로 서버에 커밋될 때까지 기다린 뒤 그 값을 반환한다.
+ * getDocFromServer를 쓰지 않는 이유: 쓰기 직후 곧바로 재조회하면 드물게 그 사이의
+ * 서버 응답을 못 받아 필드가 아직 null인 스냅샷을 돌려주는 경우가 있었다(관찰된 버그 —
+ * 그 결과 체크인이 1970-01-01로 저장돼 화면에 영원히 안 보이는 사고로 이어짐).
+ * onSnapshot으로 "이 문서에 대한 로컬의 보류 중인 쓰기가 없어졌다(hasPendingWrites:false)"는
+ * 신호를 직접 기다리는 쪽이 Firestore가 공식적으로 권장하는, 경쟁 상태 없는 방법이다.
+ */
+function waitForServerAck(ref, field, timeoutMs = 15000) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      unsub()
+      reject(new Error(`${field} 필드가 서버에 커밋되는 걸 기다리다 시간 초과됐어요.`))
+    }, timeoutMs)
+
+    const unsub = onSnapshot(
+      ref,
+      { includeMetadataChanges: true },
+      (snap) => {
+        const value = snap.data()?.[field]
+        if (!snap.metadata.hasPendingWrites && value) {
+          clearTimeout(timer)
+          unsub()
+          resolve(value)
+        }
+      },
+      (err) => {
+        clearTimeout(timer)
+        unsub()
+        reject(err)
+      },
+    )
+  })
+}
+
+/**
+ * 학생 셀프 체크인: serverTimestamp로 문서를 먼저 쓰고, 서버가 실제로 확정한 값을
+ * 받은 뒤에야 onTime/late를 판단한다. 기기 시계는 어디에서도 사용하지 않는다.
  */
 export async function submitSelfCheckin({ classId, studentId, lateThresholdTime }) {
   // dateId는 아직 모르므로, 클라이언트 대략 날짜로 우선 문서를 만들고
@@ -36,8 +71,7 @@ export async function submitSelfCheckin({ classId, studentId, lateThresholdTime 
     { merge: true },
   )
 
-  const serverSnap = await getDocFromServer(provisionalRef)
-  const serverCheckedAt = serverSnap.data().checkedAt
+  const serverCheckedAt = await waitForServerAck(provisionalRef, 'checkedAt')
   const realDateId = toDateId(serverCheckedAt)
 
   const late = isAfterThreshold(serverCheckedAt, lateThresholdTime)

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth'
 import { auth } from '../firebase'
 
@@ -13,7 +13,12 @@ function readStored() {
   }
 }
 
-export function useStudentSession() {
+const StudentSessionContext = createContext(null)
+
+// 로그인 화면(자식 컴포넌트)에서 login()을 호출한 결과가 App.jsx 등 다른 곳의
+// 라우팅 판단에도 즉시 반영되도록, 세션 상태를 컴포넌트마다 따로 두지 않고
+// 이 Provider 하나에서만 관리하고 Context로 공유한다.
+export function StudentSessionProvider({ children }) {
   const [session, setSession] = useState(readStored)
   const [authReady, setAuthReady] = useState(false)
 
@@ -45,5 +50,15 @@ export function useStudentSession() {
     }
   }, [session])
 
-  return { session, authReady, login, logout }
+  const value = useMemo(() => ({ session, authReady, login, logout }), [session, authReady, login, logout])
+
+  return <StudentSessionContext.Provider value={value}>{children}</StudentSessionContext.Provider>
+}
+
+export function useStudentSession() {
+  const ctx = useContext(StudentSessionContext)
+  if (!ctx) {
+    throw new Error('useStudentSession은 StudentSessionProvider 안에서만 사용할 수 있어요.')
+  }
+  return ctx
 }

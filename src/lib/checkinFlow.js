@@ -16,6 +16,9 @@ import { computeEarnedStamps, resolveNewlyUnlocked } from './stamps'
 export async function ensureDailyQuestion(classId, dateId) {
   const dailyRef = doc(db, 'classes', classId, 'dailyQuestion', dateId)
   const settingsRef = doc(db, 'classes', classId, 'settings', 'config')
+  // 순환 인덱스는 settings(교사 전용 쓰기)가 아니라 dailyQuestion 컬렉션 안에 별도로 둔다.
+  // 이 함수는 학생 클라이언트에서도 호출되는데, 학생은 settings에 쓸 권한이 없기 때문.
+  const autoIndexRef = doc(db, 'classes', classId, 'dailyQuestion', '_autoIndex')
 
   return runTransaction(db, async (tx) => {
     const dailySnap = await tx.get(dailyRef)
@@ -38,11 +41,13 @@ export async function ensureDailyQuestion(classId, dateId) {
     const questions = qSnap.docs.map((d) => ({ id: d.id, ...d.data() }))
     if (questions.length === 0) return null
 
-    const idx = (settings.questionAutoIndex || 0) % questions.length
+    const autoIndexSnap = await tx.get(autoIndexRef)
+    const currentIndex = autoIndexSnap.data()?.value || 0
+    const idx = currentIndex % questions.length
     const chosen = questions[idx]
 
     tx.set(dailyRef, { questionId: chosen.id, mode: 'auto' })
-    tx.set(settingsRef, { questionAutoIndex: idx + 1 }, { merge: true })
+    tx.set(autoIndexRef, { value: idx + 1 })
 
     return { questionId: chosen.id, mode: 'auto' }
   })

@@ -3,6 +3,11 @@ const KST_OFFSET_MS = 9 * 60 * 60 * 1000
 
 /** JS Date 또는 Firestore Timestamp를 받아 KST 기준 {y,m,d,hh,mm} 필드로 분해 */
 export function toKstParts(input) {
+  if (input == null) {
+    // null/undefined를 조용히 new Date(0)(1970-01-01)으로 만들어버리면 지각 판정/체크인 날짜가
+    // 엉뚱한 값으로 저장되는 걸 못 알아채는 사고로 이어진다 — 실제로 한 번 겪었음. 크게 실패시킨다.
+    throw new Error('toKstParts: 날짜/시각 값이 없어요 (null/undefined).')
+  }
   const date = input?.toDate ? input.toDate() : input instanceof Date ? input : new Date(input)
   const kstMs = date.getTime() + KST_OFFSET_MS
   const kst = new Date(kstMs)
