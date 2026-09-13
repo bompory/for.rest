@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { collection, getDocs, query, where, orderBy } from 'firebase/firestore'
+import { addDoc, collection, getDocs, query, where } from 'firebase/firestore'
 import { signInAnonymously } from 'firebase/auth'
 import { auth, db } from '../firebase'
 import { useStudentSession } from '../hooks/useStudentSession'
@@ -14,9 +14,10 @@ export default function LoginStudent() {
   const [step, setStep] = useState(STEPS.CODE)
   const [classCode, setClassCode] = useState('')
   const [classId, setClassId] = useState(null)
-  const [students, setStudents] = useState([])
-  const [selectedStudent, setSelectedStudent] = useState(null)
+  const [nameInput, setNameInput] = useState('')
+  const [matchedStudent, setMatchedStudent] = useState(null) // null = 처음 등록하는 학생
   const [pin, setPin] = useState('')
+  const [pinConfirm, setPinConfirm] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const { login } = useStudentSession()
@@ -45,16 +46,7 @@ export default function LoginStudent() {
         setError('학급코드를 다시 확인해주세요.')
         return
       }
-      const classDoc = snap.docs[0]
-      const studentsSnap = await getDocs(
-        query(
-          collection(db, 'classes', classDoc.id, 'students'),
-          where('isActive', '==', true),
-          orderBy('order'),
-        ),
-      )
-      setClassId(classDoc.id)
-      setStudents(studentsSnap.docs.map((d) => ({ id: d.id, ...d.data() })))
+      setClassId(snap.docs[0].id)
       setStep(STEPS.NAME)
     } catch (err) {
       setError(
@@ -82,31 +74,100 @@ export default function LoginStudent() {
     lookupClass(classCode)
   }
 
-  function handleSelectStudent(student) {
-    setSelectedStudent(student)
-    setPin('')
+  async function handleNameSubmit(e) {
+    e.preventDefault()
+    const name = nameInput.trim()
+    if (!name) return
     setError('')
-    setStep(STEPS.PIN)
+    setBusy(true)
+    try {
+      const snap = await getDocs(
+        query(
+          collection(db, 'classes', classId, 'students'),
+          where('name', '==', name),
+          where('isActive', '==', true),
+        ),
+      )
+      if (snap.size > 1) {
+        setError('같은 이름을 쓰는 학생이 여러 명이에요. 선생님께 확인해줘.')
+        return
+      }
+      setMatchedStudent(snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() })
+      setPin('')
+      setPinConfirm('')
+      setStep(STEPS.PIN)
+    } catch {
+      setError('이름을 확인하는 중 문제가 생겼어요.')
+    } finally {
+      setBusy(false)
+    }
   }
 
   async function handlePinSubmit(e) {
     e.preventDefault()
     setError('')
-    if (pin !== selectedStudent.pin) {
-      setError('PIN이 맞지 않아요. 다시 입력해줄래?')
+
+    if (matchedStudent) {
+      // 기존 학생: PIN 대조
+      if (pin !== matchedStudent.pin) {
+        setError('PIN이 맞지 않아요. 다시 입력해줄래?')
+        return
+      }
+      setBusy(true)
+      try {
+        await login({
+          classId,
+          classCode: classCode.trim().toUpperCase(),
+          studentId: matchedStudent.id,
+          studentName: matchedStudent.name,
+        })
+        navigate('/app')
+      } catch {
+        setError('로그인 중 문제가 생겼어요. 다시 시도해줄래?')
+      } finally {
+        setBusy(false)
+      }
+      return
+    }
+
+    // 처음 등록하는 학생: 새 PIN 설정
+    if (pin !== pinConfirm) {
+      setError('PIN이 서로 달라요. 두 칸에 같은 숫자를 입력해줘.')
       return
     }
     setBusy(true)
     try {
+      const name = nameInput.trim()
+      const existing = await getDocs(collection(db, 'classes', classId, 'students'))
+      const alreadyTaken = existing.docs.some(
+        (d) => d.data().name === name && d.data().isActive !== false,
+      )
+      if (alreadyTaken) {
+        setError('방금 다른 친구가 같은 이름으로 등록했나봐. 이름을 다르게 적어줘.')
+        setStep(STEPS.NAME)
+        return
+      }
+      const newDoc = await addDoc(collection(db, 'classes', classId, 'students'), {
+        name,
+        pin,
+        order: existing.size,
+        isActive: true,
+        totalStamps: 0,
+        lateCountTotal: 0,
+        onTimeStreak: 0,
+        last7LateFlags: [],
+        last7AnswerLengths: [],
+        unlockedBadgeIds: [],
+      })
       await login({
         classId,
         classCode: classCode.trim().toUpperCase(),
-        studentId: selectedStudent.id,
-        studentName: selectedStudent.name,
+        studentId: newDoc.id,
+        studentName: name,
       })
       navigate('/app')
     } catch {
-      setError('로그인 중 문제가 생겼어요. 다시 시도해줄래?')
+      setError('등록 중 문제가 생겼어요. 다시 시도해줄래?')
     } finally {
       setBusy(false)
     }
@@ -135,47 +196,95 @@ export default function LoginStudent() {
         )}
 
         {step === STEPS.NAME && (
-          <div className="flex flex-col gap-3">
-            <h1 className="font-round text-lg font-bold text-center mb-1">내 이름을 골라줘</h1>
-            <div className="grid grid-cols-3 gap-2 max-h-72 overflow-y-auto scrollbar-none">
-              {students.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => handleSelectStudent(s)}
-                  className="rounded-xl2 bg-sky-light border border-sky-dark/30 py-3 text-sm font-body hover:bg-sky transition-colors"
-                >
-                  {s.name}
-                </button>
-              ))}
-            </div>
-            <button className="text-xs text-ink/60 underline mt-1" onClick={() => setStep(STEPS.CODE)}>
-              학급코드 다시 입력
-            </button>
-          </div>
-        )}
-
-        {step === STEPS.PIN && selectedStudent && (
-          <form onSubmit={handlePinSubmit} className="flex flex-col gap-3">
-            <h1 className="font-round text-lg font-bold text-center mb-1">
-              {selectedStudent.name}, PIN 4자리를 입력해줘
-            </h1>
+          <form onSubmit={handleNameSubmit} className="flex flex-col gap-3">
+            <h1 className="font-round text-lg font-bold text-center mb-1">내 이름을 입력해줘</h1>
+            <p className="text-xs text-ink/50 text-center">
+              처음이면 이름이 자동으로 등록되고, 이미 등록했으면 그대로 로그인돼요.
+            </p>
             <input
               autoFocus
               required
-              type="password"
-              inputMode="numeric"
-              pattern="[0-9]{4}"
-              maxLength={4}
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-              className="rounded-xl2 border border-sage-light px-4 py-3 bg-white/70 outline-none focus:border-sage text-center tracking-[0.5em] font-round text-2xl"
+              placeholder="이름"
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              className="rounded-xl2 border border-sage-light px-4 py-3 bg-white/70 outline-none focus:border-sage text-center font-round text-lg"
             />
             {error && <p className="text-warmOrange text-sm text-center">{error}</p>}
-            <SpringButton type="submit" fullWidth disabled={busy || pin.length !== 4}>
+            <SpringButton type="submit" fullWidth disabled={busy || !nameInput.trim()}>
+              다음
+            </SpringButton>
+            <button type="button" className="text-xs text-ink/60 underline mt-1" onClick={() => setStep(STEPS.CODE)}>
+              학급코드 다시 입력
+            </button>
+          </form>
+        )}
+
+        {step === STEPS.PIN && (
+          <form onSubmit={handlePinSubmit} className="flex flex-col gap-3">
+            {matchedStudent ? (
+              <>
+                <h1 className="font-round text-lg font-bold text-center mb-1">
+                  {matchedStudent.name}, PIN 4자리를 입력해줘
+                </h1>
+                <input
+                  autoFocus
+                  required
+                  type="password"
+                  inputMode="numeric"
+                  pattern="[0-9]{4}"
+                  maxLength={4}
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  className="rounded-xl2 border border-sage-light px-4 py-3 bg-white/70 outline-none focus:border-sage text-center tracking-[0.5em] font-round text-2xl"
+                />
+              </>
+            ) : (
+              <>
+                <h1 className="font-round text-lg font-bold text-center mb-1">
+                  {nameInput.trim()}, 처음이구나! PIN 4자리를 정해줘
+                </h1>
+                <p className="text-xs text-ink/50 text-center">
+                  다음에 들어올 때도 이 PIN을 써야 하니 잊지 않게 잘 기억해줘.
+                </p>
+                <input
+                  autoFocus
+                  required
+                  type="password"
+                  inputMode="numeric"
+                  pattern="[0-9]{4}"
+                  maxLength={4}
+                  placeholder="PIN 4자리"
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  className="rounded-xl2 border border-sage-light px-4 py-3 bg-white/70 outline-none focus:border-sage text-center tracking-[0.5em] font-round text-2xl"
+                />
+                <input
+                  required
+                  type="password"
+                  inputMode="numeric"
+                  pattern="[0-9]{4}"
+                  maxLength={4}
+                  placeholder="PIN 확인"
+                  value={pinConfirm}
+                  onChange={(e) => setPinConfirm(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  className="rounded-xl2 border border-sage-light px-4 py-3 bg-white/70 outline-none focus:border-sage text-center tracking-[0.5em] font-round text-2xl"
+                />
+              </>
+            )}
+            {error && <p className="text-warmOrange text-sm text-center">{error}</p>}
+            <SpringButton
+              type="submit"
+              fullWidth
+              disabled={
+                busy ||
+                pin.length !== 4 ||
+                (!matchedStudent && pinConfirm.length !== 4)
+              }
+            >
               체크인 화면으로
             </SpringButton>
             <button type="button" className="text-xs text-ink/60 underline" onClick={() => setStep(STEPS.NAME)}>
-              다른 이름 선택
+              이름 다시 입력
             </button>
           </form>
         )}

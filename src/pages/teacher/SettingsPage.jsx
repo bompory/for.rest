@@ -397,10 +397,26 @@ function StudentsTab({ classId }) {
   const [name, setName] = useState('')
   const [pin, setPin] = useState('')
 
+  const [revealedIds, setRevealedIds] = useState(new Set())
+
+  function toggleReveal(id) {
+    setRevealedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   async function addStudent() {
-    if (!name.trim() || pin.length !== 4) return
+    const trimmed = name.trim()
+    if (!trimmed || pin.length !== 4) return
+    if (students.some((s) => s.name === trimmed && s.isActive)) {
+      alert('이미 같은 이름의 학생이 있어요. 이름을 다르게 적어주세요.')
+      return
+    }
     await addDoc(collection(db, 'classes', classId, 'students'), {
-      name: name.trim(),
+      name: trimmed,
       pin,
       order: students.length,
       isActive: true,
@@ -444,15 +460,30 @@ function StudentsTab({ classId }) {
 
       <Card>
         <p className="text-sm font-semibold mb-2">학생 명단 ({students.length}명)</p>
+        <p className="text-xs text-ink/50 mb-3">
+          학생들이 로그인 화면에서 스스로 이름을 등록하면 여기에 자동으로 추가돼요. PIN을 잊어버렸다는
+          학생이 있으면 여기서 확인해서 알려주세요.
+        </p>
         <div className="flex flex-col gap-2">
           {students.map((s) => (
             <div key={s.id} className="flex items-center justify-between text-sm border-b border-sage-light/40 pb-2">
               <span className={s.isActive ? '' : 'line-through text-ink/30'}>{s.name}</span>
-              <button className="text-xs underline" onClick={() => toggleActive(s)}>
-                {s.isActive ? '비활성(전학)' : '다시 활성화'}
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  className="text-xs text-ink/50 underline font-mono"
+                  onClick={() => toggleReveal(s.id)}
+                >
+                  PIN: {revealedIds.has(s.id) ? s.pin : '••••'}
+                </button>
+                <button className="text-xs underline" onClick={() => toggleActive(s)}>
+                  {s.isActive ? '비활성(전학)' : '다시 활성화'}
+                </button>
+              </div>
             </div>
           ))}
+          {students.length === 0 && (
+            <p className="text-xs text-ink/40">아직 등록된 학생이 없어요.</p>
+          )}
         </div>
       </Card>
     </div>

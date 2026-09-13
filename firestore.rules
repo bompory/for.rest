@@ -60,7 +60,10 @@ service cloud.firestore {
 
       match /students/{studentId} {
         allow read: if signedIn();
-        allow create, delete: if isTeacher(classId);
+        // 학생이 처음 로그인할 때 스스로 이름/PIN을 등록하므로 생성은 로그인한 누구나 가능.
+        // (같은 학급 인원끼리는 서로를 신뢰한다는 전제 — 자세한 내용은 README 참고)
+        allow create: if signedIn();
+        allow delete: if isTeacher(classId);
         // 학생 로그인 흐름(체크인 완료 시 totalStamps 등 롤업 필드 갱신)은 학생 클라이언트에서 발생하므로
         // 해당 필드만 예외적으로 허용하고, 이름/PIN/활성여부 등은 교사만 바꿀 수 있게 제한한다.
         allow update: if isTeacher(classId) ||
