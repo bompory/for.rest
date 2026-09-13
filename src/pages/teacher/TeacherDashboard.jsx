@@ -5,6 +5,7 @@ import { signOut } from 'firebase/auth'
 import { auth, db } from '../../firebase'
 import { useFirestoreDoc, useFirestoreQuery } from '../../hooks/useFirestore'
 import { ensureTodayEntryCode } from '../../lib/entryCode'
+import { ensureBadgeCatalogSynced } from '../../lib/stamps'
 import { teacherSetCheckin, detectWatchFlags } from '../../lib/attendance'
 import { toDateId, formatKoreanDate } from '../../lib/dateUtils'
 import { MOODS } from '../../lib/messages'
@@ -57,6 +58,7 @@ export default function TeacherDashboard({ teacher }) {
 
   useEffect(() => {
     ensureTodayEntryCode(classId).catch(() => {})
+    ensureBadgeCatalogSynced(classId).catch(() => {})
   }, [classId])
 
   const checkinByStudent = useMemo(() => {

@@ -3,6 +3,7 @@ import { db } from '../../firebase'
 import { useFirestoreDoc, useFirestoreQuery } from '../../hooks/useFirestore'
 import { toMonthId } from '../../lib/dateUtils'
 import { resolveAchievements } from '../../lib/achievements'
+import { BADGE_TIERS } from '../../lib/stamps'
 import Card from '../../components/ui/Card'
 import Creature from '../../components/creatures/CreatureSvgs'
 
@@ -21,7 +22,10 @@ export default function CollectionPage({ session }) {
 
   return (
     <div className="px-5 pt-8 pb-4 flex flex-col gap-4">
-      <h1 className="font-round text-xl font-bold text-center">도감</h1>
+      <h1 className="font-round text-xl font-bold text-center">출석 도감</h1>
+      <p className="text-sm text-ink/60 text-center -mt-2">
+        출석하며 귀여운 동물 친구들을 모아보세요! ({unlocked.size}/{badges.length || 30})
+      </p>
 
       <Card className="flex flex-col items-center gap-2">
         <p className="text-sm font-semibold">우리 반 공동 정원</p>
@@ -37,12 +41,19 @@ export default function CollectionPage({ session }) {
       <div className="grid grid-cols-3 gap-3">
         {badges.map((b) => {
           const isUnlocked = unlocked.has(b.id)
+          const tierMeta = BADGE_TIERS[b.tier] || BADGE_TIERS.common
           return (
             <Card key={b.id} className="flex flex-col items-center gap-1 p-3">
-              <Creature species={b.speciesKey} size={64} locked={!isUnlocked} />
-              <span className="text-[11px] text-ink/60">
-                {isUnlocked ? '해금 완료' : `스탬프 ${b.requiredStamps}개`}
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${tierMeta.color}`}>
+                {tierMeta.label}
               </span>
+              <Creature creatureId={b.id} size={64} locked={!isUnlocked} />
+              <span className="text-xs font-semibold">{isUnlocked ? b.name : '???'}</span>
+              {isUnlocked ? (
+                <span className="text-[10px] text-ink/50 text-center leading-snug">{b.personality}</span>
+              ) : (
+                <span className="text-[11px] text-ink/60">스탬프 {b.requiredStamps}개</span>
+              )}
             </Card>
           )
         })}
