@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../firebase'
+import { useStudentSession } from '../../hooks/useStudentSession'
 import Modal from '../../components/ui/Modal'
 import SpringButton from '../../components/ui/SpringButton'
 import { pickMessage } from '../../lib/messages'
@@ -17,6 +18,14 @@ export default function StudentShell({ session }) {
   const [reason, setReason] = useState('')
   const [sent, setSent] = useState(false)
   const [busy, setBusy] = useState(false)
+  const { logout } = useStudentSession()
+  const navigate = useNavigate()
+
+  function handleSwitchStudent() {
+    if (!window.confirm(`${session.studentName}(으)로 로그인 중이에요. 로그아웃하고 다른 이름으로 들어갈까요?`)) return
+    logout()
+    navigate('/login/student')
+  }
 
   async function submitHelpRequest() {
     setBusy(true)
@@ -44,6 +53,12 @@ export default function StudentShell({ session }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-cream">
+      <div className="flex justify-between items-center px-4 pt-3 text-xs text-ink/50">
+        <span>{session.studentName}로 로그인됨</span>
+        <button className="underline" onClick={handleSwitchStudent}>
+          내가 아니에요 (로그아웃)
+        </button>
+      </div>
       <div className="flex-1 overflow-y-auto pb-24">
         <Outlet />
       </div>

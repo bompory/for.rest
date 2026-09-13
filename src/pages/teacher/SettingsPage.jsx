@@ -435,6 +435,11 @@ function StudentsTab({ classId }) {
     await updateDoc(doc(db, 'classes', classId, 'students', s.id), { isActive: !s.isActive })
   }
 
+  async function removeStudent(s) {
+    if (!window.confirm(`${s.name}을(를) 명단에서 완전히 삭제할까요? (기록은 지워지지 않지만 되돌릴 수 없어요)`)) return
+    await deleteDoc(doc(db, 'classes', classId, 'students', s.id))
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <Card>
@@ -477,6 +482,9 @@ function StudentsTab({ classId }) {
                 </button>
                 <button className="text-xs underline" onClick={() => toggleActive(s)}>
                   {s.isActive ? '비활성(전학)' : '다시 활성화'}
+                </button>
+                <button className="text-xs text-warmOrange underline" onClick={() => removeStudent(s)}>
+                  삭제
                 </button>
               </div>
             </div>
