@@ -469,11 +469,11 @@ function StudentsTab({ classId }) {
           학생들이 로그인 화면에서 스스로 이름을 등록하면 여기에 자동으로 추가돼요. PIN을 잊어버렸다는
           학생이 있으면 여기서 확인해서 알려주세요.
         </p>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           {students.map((s) => (
-            <div key={s.id} className="flex items-center justify-between text-sm border-b border-sage-light/40 pb-2">
-              <span className={s.isActive ? '' : 'line-through text-ink/30'}>{s.name}</span>
-              <div className="flex items-center gap-3">
+            <div key={s.id} className="flex flex-col gap-1.5 border-b border-sage-light/40 pb-2">
+              <span className={`text-sm ${s.isActive ? '' : 'line-through text-ink/30'}`}>{s.name}</span>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <button
                   className="text-xs text-ink/50 underline font-mono"
                   onClick={() => toggleReveal(s.id)}
