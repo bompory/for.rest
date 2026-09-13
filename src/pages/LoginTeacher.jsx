@@ -8,6 +8,7 @@ import Card from '../components/ui/Card'
 import MascotHero from '../components/mascot/MascotHero'
 import AuthRoleTabs from '../components/auth/AuthRoleTabs'
 import AppTitle from '../components/ui/AppTitle'
+import Watermark from '../components/ui/Watermark'
 import LegalFooter from '../components/legal/LegalFooter'
 import { defaultQuestionBank } from '../seed/questions'
 import { defaultBadgeCatalog } from '../lib/stamps'
@@ -102,6 +103,7 @@ export default function LoginTeacher() {
         {error && <p className="text-warmOrange text-sm">{error}</p>}
       </Card>
       <LegalFooter />
+      <Watermark />
     </div>
   )
 }

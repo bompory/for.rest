@@ -11,6 +11,7 @@ import MascotHero from '../components/mascot/MascotHero'
 import AuthRoleTabs from '../components/auth/AuthRoleTabs'
 import AppTitle from '../components/ui/AppTitle'
 import LegalFooter from '../components/legal/LegalFooter'
+import Watermark from '../components/ui/Watermark'
 
 const STEPS = { CODE: 'code', NAME: 'name', PIN: 'pin' }
 
@@ -327,6 +328,7 @@ export default function LoginStudent() {
         )}
       </Card>
       <LegalFooter />
+      <Watermark />
     </div>
   )
 }

@@ -14,6 +14,7 @@ import Modal from '../../components/ui/Modal'
 import Mascot from '../../components/mascot/Mascot'
 import JoinQrCode from '../../components/ui/JoinQrCode'
 import LegalFooter from '../../components/legal/LegalFooter'
+import Watermark from '../../components/ui/Watermark'
 
 const STATUS_OPTIONS = [
   { value: 'onTime', label: '정상' },
@@ -241,6 +242,7 @@ export default function TeacherDashboard({ teacher }) {
         <Mascot mood="neutral" size={50} />
       </div>
       <LegalFooter />
+      <Watermark />
     </div>
   )
 }

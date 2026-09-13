@@ -2,6 +2,7 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import SpringButton from '../components/ui/SpringButton'
 import AppTitle from '../components/ui/AppTitle'
 import MascotHero from '../components/mascot/MascotHero'
+import Watermark from '../components/ui/Watermark'
 import LegalFooter from '../components/legal/LegalFooter'
 
 export default function RoleGate({ teacher, session }) {
@@ -27,6 +28,7 @@ export default function RoleGate({ teacher, session }) {
         </SpringButton>
       </div>
       <LegalFooter />
+      <Watermark />
     </div>
   )
 }

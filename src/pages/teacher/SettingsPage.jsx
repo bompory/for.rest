@@ -14,6 +14,7 @@ import { db } from '../../firebase'
 import { useFirestoreDoc, useFirestoreQuery } from '../../hooks/useFirestore'
 import { MASCOT_SLOTS, resetMascotImage, uploadMascotImage } from '../../lib/mascotUpload'
 import { hashPin } from '../../lib/pinHash'
+import { deleteStudentCompletely } from '../../lib/studentDeletion'
 import Card from '../../components/ui/Card'
 import SpringButton from '../../components/ui/SpringButton'
 import stickerOnTimeDefault from '../../assets/sticker-ontime.png'
@@ -563,8 +564,13 @@ function StudentsTab({ classId }) {
   }
 
   async function removeStudent(s) {
-    if (!window.confirm(`${s.name}을(를) 명단에서 완전히 삭제할까요? (기록은 지워지지 않지만 되돌릴 수 없어요)`)) return
-    await deleteDoc(doc(db, 'classes', classId, 'students', s.id))
+    if (
+      !window.confirm(
+        `${s.name}을(를) 완전히 삭제할까요? 출결 기록·답변·상담요청·메모까지 전부 함께 지워지고 되돌릴 수 없어요.`,
+      )
+    )
+      return
+    await deleteStudentCompletely(classId, s.id)
   }
 
   return (
